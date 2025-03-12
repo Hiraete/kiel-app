@@ -28,10 +28,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     try {
       setLoading(true);
       setError('');
+      console.log('Giriş denemesi:', { email });
       await login(email, password);
+      console.log('Giriş başarılı');
       // Login başarılı olduğunda AuthContext user state'i güncellenecek
       // ve AppNavigator otomatik olarak Main ekranına yönlendirecek
     } catch (err: any) {
+      console.error('Giriş hatası:', err);
       setError(err.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
