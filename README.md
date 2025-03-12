@@ -21,22 +21,22 @@ Kiel App, otizmli çocukların ebeveynlerine destek olmak amacıyla geliştirilm
 - AsyncStorage
 
 ### Backend
-- PHP
-- Laravel
-- MySQL
+- Node.js
+- Express
+- MongoDB
 - JWT Authentication
 
 ## Kurulum
 
-### Backend (PHP/Laravel)
+### Backend (Node.js/Express)
 1. Backend dizinine gidin:
 ```bash
 cd backend
 ```
 
-2. Composer bağımlılıklarını yükleyin:
+2. NPM bağımlılıklarını yükleyin:
 ```bash
-composer install
+npm install
 ```
 
 3. .env dosyasını oluşturun:
@@ -44,9 +44,9 @@ composer install
 cp .env.example .env
 ```
 
-4. Veritabanı ayarlarını yapılandırın ve migration'ları çalıştırın:
+4. MongoDB bağlantı bilgilerini ayarlayın ve uygulamayı başlatın:
 ```bash
-php artisan migrate
+npm run dev
 ```
 
 ### Frontend (React Native)
@@ -75,4 +75,4 @@ npm start
 
 ## Lisans
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın. 
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
