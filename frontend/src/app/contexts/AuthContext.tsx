@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authService } from '../../services/api';
 
 interface User {
   id: string;
@@ -30,36 +31,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const storedToken = await AsyncStorage.getItem('token');
-      if (!storedToken) {
-        setLoading(false);
-        return false;
-      }
+      const currentUser = await authService.getCurrentUser();
+      const storedToken = await AsyncStorage.getItem('userToken');
 
-      const response = await fetch('http://localhost:5000/api/protected/profile', {
-        headers: {
-          'Authorization': `Bearer ${storedToken}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
+      if (currentUser && storedToken) {
+        setUser(currentUser);
         setToken(storedToken);
         setLoading(false);
         return true;
       } else {
-        await AsyncStorage.removeItem('token');
-        setToken(null);
         setUser(null);
+        setToken(null);
         setLoading(false);
         return false;
       }
     } catch (error) {
       console.error('Token kontrol hatası:', error);
-      await AsyncStorage.removeItem('token');
-      setToken(null);
       setUser(null);
+      setToken(null);
       setLoading(false);
       return false;
     }
@@ -67,65 +56,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Giriş yapılırken bir hata oluştu');
-      }
-
-      await AsyncStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-
-      // Başarılı giriş sonrası profil bilgilerini al
-      await checkAuth();
-    } catch (error) {
+      const response = await authService.login({ email, password });
+      setUser(response.user);
+      setToken(response.token);
+    } catch (error: any) {
       console.error('Giriş hatası:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Giriş yapılırken bir hata oluştu');
     }
   };
 
   const register = async (username: string, email: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Kayıt olurken bir hata oluştu');
-      }
-
-      await AsyncStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-
-      // Başarılı kayıt sonrası profil bilgilerini al
-      await checkAuth();
-    } catch (error) {
+      const response = await authService.register({ username, email, password });
+      setUser(response.user);
+      setToken(response.token);
+    } catch (error: any) {
       console.error('Kayıt hatası:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Kayıt olurken bir hata oluştu');
     }
   };
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      setToken(null);
+      await authService.logout();
       setUser(null);
+      setToken(null);
     } catch (error) {
       console.error('Çıkış hatası:', error);
       throw error;
