@@ -9,6 +9,7 @@ export default function RegisterScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [role, setRole] = useState<'uzman' | 'danisan'>('danisan');
 
   const { register } = useAuth();
 

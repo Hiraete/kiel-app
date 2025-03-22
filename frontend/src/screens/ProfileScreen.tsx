@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, ActivityIndicator } from 'react-native-paper';
-import { useAuth } from '../app/contexts/AuthContext';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/types';
+import { useAuth } from '../contexts/AuthContext';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { MainTabParamList } from '../navigation/types';
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
+type ProfileScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Profile'>;
 
 interface ProfileScreenProps {
   navigation: ProfileScreenNavigationProp;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import { useAuth } from '../app/contexts/AuthContext';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import { useAuth } from '../contexts/AuthContext';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -16,6 +16,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [role, setRole] = useState<'uzman' | 'danisan'>('danisan');
 
   const { login } = useAuth();
 
@@ -29,10 +30,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       setLoading(true);
       setError('');
       console.log('Giriş denemesi:', { email });
-      await login(email, password);
+      await login(email, password, role);
       console.log('Giriş başarılı');
-      // Login başarılı olduğunda AuthContext user state'i güncellenecek
-      // ve AppNavigator otomatik olarak Main ekranına yönlendirecek
+      navigation.navigate('Main');
     } catch (err: any) {
       console.error('Giriş hatası:', err);
       setError(err.message || 'Giriş yapılırken bir hata oluştu');
