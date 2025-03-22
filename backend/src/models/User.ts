@@ -1,66 +1,60 @@
-import { Schema, model, Document } from 'mongoose';
-import bcryptjs from 'bcryptjs';
+import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
+  role: 'uzman' | 'danisan';
   createdAt: Date;
-  updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser>({
+const userSchema = new Schema({
   username: {
     type: String,
-    required: [true, 'Kullanıcı adı zorunludur'],
+    required: true,
+    unique: true,
     trim: true,
-    minlength: [3, 'Kullanıcı adı en az 3 karakter olmalıdır']
   },
   email: {
     type: String,
-    required: [true, 'Email adresi zorunludur'],
+    required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    lowercase: true,
   },
   password: {
     type: String,
-    required: [true, 'Şifre zorunludur'],
-    minlength: [6, 'Şifre en az 6 karakter olmalıdır']
-  }
-}, {
-  timestamps: true
+    required: true,
+  },
+  role: {
+    type: String,
+    enum: ['uzman', 'danisan'],
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// Şifreyi hashleme
+// Şifre hashleme middleware
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-
+  
   try {
-    const salt = await bcryptjs.genSalt(10);
-    this.password = await bcryptjs.hash(this.password, salt);
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (error) {
-    next(error as Error);
+  } catch (error: any) {
+    next(error);
   }
 });
 
 // Şifre karşılaştırma metodu
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  try {
-    console.log('Karşılaştırılacak şifreler:', {
-      candidate: candidatePassword,
-      stored: this.password
-    });
-    const isMatch = await bcryptjs.compare(candidatePassword, this.password);
-    console.log('Şifre eşleşmesi:', isMatch);
-    return isMatch;
-  } catch (error) {
-    console.error('Şifre karşılaştırma hatası:', error);
-    throw new Error('Şifre karşılaştırma hatası');
-  }
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = model<IUser>('User', userSchema);
-export default User; 
+export default mongoose.model<IUser>('User', userSchema); 

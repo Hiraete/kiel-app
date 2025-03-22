@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
-import { AuthProvider } from './src/app/contexts/AuthContext';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 const theme = {
   ...MD3LightTheme,
