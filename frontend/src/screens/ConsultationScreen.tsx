@@ -6,7 +6,7 @@ const experts = [
   {
     id: 1,
     name: 'Dr. Ayşe Yılmaz',
-    specialty: 'Fizyoterapist',
+    specialty: 'Terapist',
     experience: '10 yıl deneyim',
     rating: 4.8,
     available: true,
@@ -14,7 +14,7 @@ const experts = [
   {
     id: 2,
     name: 'Dr. Mehmet Demir',
-    specialty: 'Spor Hekimi',
+    specialty: 'Nörolog',
     experience: '15 yıl deneyim',
     rating: 4.9,
     available: true,

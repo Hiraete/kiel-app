@@ -1,45 +1,45 @@
-# KielApp - Fizyoterapi Asistanı
+# KielApp - Otizm Destek Uygulaması
 
-KielApp, fizyoterapi sürecini kolaylaştırmak ve hastaların tedavi süreçlerini daha etkili hale getirmek için tasarlanmış bir mobil uygulamadır.
+KielApp, otizmli çocukların ve ailelerinin günlük yaşamlarını kolaylaştırmak, gelişimlerini desteklemek ve takip etmek için tasarlanmış kapsamlı bir mobil uygulamadır.
 
 ## Özellikler
 
 ### Kullanıcı Yönetimi
-- İki farklı kullanıcı rolü: Uzman (Fizyoterapist) ve Danışan (Hasta)
+- İki farklı kullanıcı rolü: Uzman (Terapist) ve Danışan (Ebeveyn)
 - Güvenli kayıt ve giriş sistemi
 - JWT tabanlı kimlik doğrulama
 - Profil yönetimi
 
 ### Ana Özellikler
 1. **Günlük Aktivite Takibi**
-   - Günlük egzersiz programı
-   - Aktivite planlaması
-   - İlerleme takibi
+   - Günlük rutin planlaması
+   - Aktivite çizelgeleri
+   - Davranış takibi
 
 2. **Egzersiz Programı**
-   - Kişiselleştirilmiş egzersiz listeleri
-   - Video destekli egzersiz açıklamaları
-   - Zorluk seviyesi ayarlaması
+   - Özel eğitim aktiviteleri
+   - Görsel destekli alıştırmalar
+   - Bireyselleştirilmiş programlar
 
 3. **Eğitici Oyunlar**
-   - Rehabilitasyon sürecini destekleyen oyunlar
-   - İnteraktif alıştırmalar
-   - Motivasyon sistemi
+   - Sosyal beceri geliştirici oyunlar
+   - İnteraktif öğrenme aktiviteleri
+   - Ödül sistemi
 
 4. **Gelişim Raporları**
-   - Detaylı ilerleme grafikleri
-   - Performans analizi
-   - Dönemsel karşılaştırmalar
+   - Davranış analizi
+   - İlerleme grafikleri
+   - Dönemsel değerlendirmeler
 
 5. **Forum**
-   - Uzman yazıları
-   - Deneyim paylaşımları
+   - Uzman paylaşımları
+   - Aile deneyimleri
    - Soru-cevap bölümü
 
 6. **Uzman Görüşmesi**
-   - Online görüşme talep sistemi
-   - Uzman profilleri ve değerlendirmeleri
-   - Randevu yönetimi
+   - Online danışmanlık sistemi
+   - Uzman profilleri
+   - Randevu planlama
 
 ## Teknik Altyapı
 
@@ -104,9 +104,9 @@ JWT_SECRET=your_jwt_secret
 - POST /api/activities - Yeni aktivite ekleme
 - PUT /api/activities/:id - Aktivite güncelleme
 
-### Egzersiz Programı
-- GET /api/exercises - Egzersiz listesi
-- GET /api/exercises/:id - Egzersiz detayı
+### Eğitim Programı
+- GET /api/exercises - Aktivite listesi
+- GET /api/exercises/:id - Aktivite detayı
 
 ### Forum
 - GET /api/forum/posts - Forum gönderileri
@@ -132,6 +132,6 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosy
 
 ## İletişim
 
-Proje Sahibi - [@emircannn](https://github.com/emircannn)
+Proje Sahibi - [@Hiraete](https://github.com/Hiraete)
 
-Proje Linki: [https://github.com/emircannn/KielApp](https://github.com/emircannn/KielApp) 
+Proje Linki: [https://github.com/Hiraete/KielApp](https://github.com/Hiraete/KielApp) 
