@@ -1,12 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from '../screens/HomeScreen';
 import DailyActivityScreen from '../screens/DailyActivityScreen';
 import ExercisesScreen from '../screens/ExercisesScreen';
 import GamesScreen from '../screens/GamesScreen';
 import ReportsScreen from '../screens/ReportsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ForumScreen from '../screens/ForumScreen';
+import ConsultationScreen from '../screens/ConsultationScreen';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -16,7 +18,12 @@ export default function MainNavigator() {
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarInactiveTintColor: '#6B7280',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+        },
         headerShown: false,
       }}
     >
@@ -24,8 +31,9 @@ export default function MainNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
+          tabBarLabel: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home" size={size} color={color} />
+            <MaterialCommunityIcons name="home" color={color} size={size} />
           ),
         }}
       />
@@ -33,8 +41,9 @@ export default function MainNavigator() {
         name="DailyActivity"
         component={DailyActivityScreen}
         options={{
+          tabBarLabel: 'Aktivite',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="calendar" size={size} color={color} />
+            <MaterialCommunityIcons name="calendar-today" color={color} size={size} />
           ),
         }}
       />
@@ -42,8 +51,9 @@ export default function MainNavigator() {
         name="Exercises"
         component={ExercisesScreen}
         options={{
+          tabBarLabel: 'Egzersiz',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="dumbbell" size={size} color={color} />
+            <MaterialCommunityIcons name="run" color={color} size={size} />
           ),
         }}
       />
@@ -51,8 +61,9 @@ export default function MainNavigator() {
         name="Games"
         component={GamesScreen}
         options={{
+          tabBarLabel: 'Oyunlar',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="gamepad-variant" size={size} color={color} />
+            <MaterialCommunityIcons name="gamepad-variant" color={color} size={size} />
           ),
         }}
       />
@@ -60,8 +71,29 @@ export default function MainNavigator() {
         name="Reports"
         component={ReportsScreen}
         options={{
+          tabBarLabel: 'Raporlar',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-bar" size={size} color={color} />
+            <MaterialCommunityIcons name="chart-line" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Forum"
+        component={ForumScreen}
+        options={{
+          tabBarLabel: 'Forum',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="forum" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Consultation"
+        component={ConsultationScreen}
+        options={{
+          tabBarLabel: 'Görüşme',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="message-text" color={color} size={size} />
           ),
         }}
       />
@@ -69,8 +101,9 @@ export default function MainNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
+          tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" size={size} color={color} />
+            <MaterialCommunityIcons name="account" color={color} size={size} />
           ),
         }}
       />

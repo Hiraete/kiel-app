@@ -11,4 +11,6 @@ export type MainTabParamList = {
   Games: undefined;
   Reports: undefined;
   Profile: undefined;
+  Forum: undefined;
+  Consultation: undefined;
 }; 

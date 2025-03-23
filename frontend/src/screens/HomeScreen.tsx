@@ -17,7 +17,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
-  const activities = [
+  const activities = [ 
     {
       id: 1,
       title: 'Günlük Aktivite',
@@ -45,7 +45,19 @@ export default function HomeScreen() {
       description: 'Gelişim raporlarınız',
       icon: 'chart-line',
       screen: 'Reports',
-    },
+    },{
+      id: 5,
+      title: 'Forum',
+      description: 'Uzmanlarımızın ve danışanlarımızın yazdığı yardımcı yazılar',
+      icon: 'comment',
+      screen: 'Forum',
+    },{
+      id: 6,
+      title: 'Uzmanlarla Görüşme',
+      description: 'Uzmanlarımızla görüşme yapın',
+      icon: '<FontAwesomeIcon icon="fa-solid fa-envelope" />',
+      screen: 'Consultation',
+    }
   ] as const;
 
   return (
