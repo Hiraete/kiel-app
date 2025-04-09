@@ -9,6 +9,7 @@ KielApp, otizmli çocukların ve ailelerinin günlük yaşamlarını kolaylaşt�
 - Güvenli kayıt ve giriş sistemi
 - JWT tabanlı kimlik doğrulama
 - Profil yönetimi
+- Tercih ve ayarlar (tema, bildirimler, dil seçenekleri)
 
 ### Ana Özellikler
 1. **Günlük Aktivite Takibi**
@@ -38,8 +39,15 @@ KielApp, otizmli çocukların ve ailelerinin günlük yaşamlarını kolaylaşt�
 
 6. **Uzman Görüşmesi**
    - Online danışmanlık sistemi
-   - Uzman profilleri
-   - Randevu planlama
+   - Uzman profilleri ve müsaitlik takvimi
+   - Randevu planlama ve takip sistemi
+   - Randevu değerlendirme ve puanlama
+
+7. **Bildirim Sistemi**
+   - Randevu bildirimleri
+   - Mesaj bildirimleri
+   - Sistem bildirimleri
+   - Bildirim tercihleri yönetimi
 
 ## Teknik Altyapı
 
@@ -57,6 +65,7 @@ KielApp, otizmli çocukların ve ailelerinin günlük yaşamlarını kolaylaşt�
 - MongoDB
 - JWT Authentication
 - RESTful API
+- Bildirim sistemi
 
 ## Kurulum
 
@@ -98,6 +107,8 @@ JWT_SECRET=your_jwt_secret
 ### Kullanıcı İşlemleri
 - GET /api/users/profile - Kullanıcı profili
 - PUT /api/users/profile - Profil güncelleme
+- GET /api/users/experts - Uzman listesi
+- PUT /api/users/expert-profile - Uzman profili güncelleme
 
 ### Aktivite Yönetimi
 - GET /api/activities - Aktivite listesi
@@ -114,9 +125,17 @@ JWT_SECRET=your_jwt_secret
 - GET /api/forum/posts/:id - Gönderi detayı
 
 ### Uzman Görüşmesi
-- GET /api/consultations - Görüşme listesi
-- POST /api/consultations - Görüşme talebi oluşturma
-- PUT /api/consultations/:id - Görüşme durumu güncelleme
+- GET /api/appointments - Görüşme listesi
+- POST /api/appointments - Görüşme talebi oluşturma
+- PUT /api/appointments/:id - Görüşme güncelleme
+- PUT /api/appointments/:id/cancel - Görüşme iptali
+- PUT /api/appointments/:id/confirm - Görüşme onayı
+- PUT /api/appointments/:id/rate - Görüşme değerlendirme
+
+### Bildirimler
+- GET /api/notifications - Bildirim listesi
+- PUT /api/notifications/:id/read - Bildirimi okundu işaretle
+- PUT /api/notifications/read-all - Tüm bildirimleri okundu işaretle
 
 ## Katkıda Bulunma
 
