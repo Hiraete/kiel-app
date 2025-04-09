@@ -12,11 +12,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabParamList } from '../navigation/types';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { Activity, Program } from '../types';
+import { Activity, Program, RootStackParamList } from '../types/index';
 import api from '../services/api';
 import { Button } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -132,7 +131,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.title}>
+      <Text style={styles.title}>
         Hoş Geldiniz, {user?.name}
       </Text>
       
@@ -182,6 +181,8 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 24,
     textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '600',
   },
   section: {
     padding: 20,

@@ -132,6 +132,18 @@ export interface AppointmentResponse {
   limit: number;
 }
 
+// Navigasyon Tipleri
+export type RootStackParamList = {
+  Home: undefined;
+  Login: undefined;
+  Register: undefined;
+  Profile: undefined;
+  Appointments: undefined;
+  CreateAppointment: undefined;
+  Exercises: { activityId: string };
+  DailyActivity: { programId: string };
+};
+
 // Form Tipleri
 export interface LoginForm {
   email: string;

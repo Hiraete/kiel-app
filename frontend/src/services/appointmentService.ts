@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface Appointment {
@@ -20,36 +20,55 @@ export interface Appointment {
   updatedAt: string;
 }
 
-export interface CreateAppointmentData {
-  expert: {
-    id: string;
-    name: string;
-  };
+interface CreateAppointmentPayload {
+  expertId: string;
   date: string;
   startTime: string;
   endTime: string;
   notes?: string;
 }
 
-class AppointmentService {
-  async getAppointments(): Promise<Appointment[]> {
-    const response = await api.get('/appointments');
-    return response.data;
-  }
-
-  async createAppointment(data: CreateAppointmentData): Promise<Appointment> {
-    const response = await api.post('/appointments', data);
-    return response.data;
-  }
-
-  async updateAppointmentStatus(id: string, status: Appointment['status']): Promise<Appointment> {
-    const response = await api.patch(`/appointments/${id}/status`, { status });
-    return response.data;
-  }
-
-  async cancelAppointment(id: string): Promise<void> {
-    await api.delete(`/appointments/${id}`);
-  }
+interface AppointmentFilter {
+  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  expertId?: string;
+  clientId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
-export const appointmentService = new AppointmentService(); 
+export const appointmentService = {
+  createAppointment: async (payload: CreateAppointmentPayload) => {
+    const response = await api.post('/appointments', payload);
+    return response.data;
+  },
+
+  getAppointments: async (filters?: AppointmentFilter) => {
+    const response = await api.get('/appointments', { params: filters });
+    return response.data;
+  },
+
+  getAppointmentById: async (id: string) => {
+    const response = await api.get(`/appointments/${id}`);
+    return response.data;
+  },
+
+  updateAppointment: async (id: string, payload: Partial<CreateAppointmentPayload>) => {
+    const response = await api.put(`/appointments/${id}`, payload);
+    return response.data;
+  },
+
+  cancelAppointment: async (id: string) => {
+    const response = await api.put(`/appointments/${id}/cancel`);
+    return response.data;
+  },
+
+  confirmAppointment: async (id: string) => {
+    const response = await api.put(`/appointments/${id}/confirm`);
+    return response.data;
+  },
+
+  rateAppointment: async (id: string, rating: number, review?: string) => {
+    const response = await api.put(`/appointments/${id}/rate`, { rating, review });
+    return response.data;
+  }
+}; 
