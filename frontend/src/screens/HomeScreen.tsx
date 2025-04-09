@@ -1,136 +1,174 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import {
+  View,
   Text,
-  useTheme,
-  Card,
-  IconButton,
-  FAB,
-} from 'react-native-paper';
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/types';
+import { MainTabParamList } from '../navigation/types';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Activity, Program } from '../types';
+import api from '../services/api';
+import { Button } from 'react-native-paper';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 export default function HomeScreen() {
-  const theme = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const activities = [ 
-    {
-      id: 1,
-      title: 'Günlük Aktivite',
-      description: 'Bugünkü aktivitelerinizi planlayın',
-      icon: 'calendar-today',
-      screen: 'DailyActivity',
-    },
-    {
-      id: 2,
-      title: 'Egzersizler',
-      description: 'Size özel egzersiz programı',
-      icon: 'run',
-      screen: 'Exercises',
-    },
-    {
-      id: 3,
-      title: 'Oyunlar',
-      description: 'Eğlenceli öğrenme oyunları',
-      icon: 'gamepad-variant',
-      screen: 'Games',
-    },
-    {
-      id: 4,
-      title: 'Raporlar',
-      description: 'Gelişim raporlarınız',
-      icon: 'chart-line',
-      screen: 'Reports',
-    },{
-      id: 5,
-      title: 'Forum',
-      description: 'Uzmanlarımızın ve danışanlarımızın yazdığı yardımcı yazılar',
-      icon: 'comment',
-      screen: 'Forum',
-    },{
-      id: 6,
-      title: 'Uzmanlarla Görüşme',
-      description: 'Uzmanlarımızla görüşme yapın',
-      icon: '<FontAwesomeIcon icon="fa-solid fa-envelope" />',
-      screen: 'Consultation',
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [activitiesResponse, programsResponse] = await Promise.all([
+        api.get('/activities'),
+        api.get('/programs'),
+      ]);
+
+      setActivities(activitiesResponse.data.activities);
+      setPrograms(programsResponse.data.programs);
+    } catch (error) {
+      console.error('Veri yükleme hatası:', error);
+    } finally {
+      setLoading(false);
     }
-  ] as const;
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  const renderActivityCard = (activity: Activity) => (
+    <TouchableOpacity
+      key={activity._id}
+      style={styles.card}
+      onPress={() => navigation.navigate('Exercises', { activityId: activity._id })}
+    >
+      <MaterialCommunityIcons
+        name={getActivityIcon(activity.type)}
+        size={24}
+        color="#4A90E2"
+      />
+      <Text style={styles.cardTitle}>{activity.title}</Text>
+      <Text style={styles.cardDescription} numberOfLines={2}>
+        {activity.description}
+      </Text>
+      <View style={styles.cardFooter}>
+        <Text style={styles.cardDifficulty}>
+          Zorluk: {activity.difficultyLevel}
+        </Text>
+        <Text style={styles.cardDuration}>
+          {activity.duration} dakika
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderProgramCard = (program: Program) => (
+    <TouchableOpacity
+      key={program._id}
+      style={styles.card}
+      onPress={() => navigation.navigate('DailyActivity', { programId: program._id })}
+    >
+      <MaterialCommunityIcons
+        name="calendar-check"
+        size={24}
+        color="#4A90E2"
+      />
+      <Text style={styles.cardTitle}>{program.name}</Text>
+      <Text style={styles.cardDescription} numberOfLines={2}>
+        {program.description}
+      </Text>
+      <View style={styles.cardFooter}>
+        <Text style={styles.cardProgress}>
+          İlerleme: {program.progress}%
+        </Text>
+        <Text style={styles.cardStatus}>
+          {program.status === 'active' ? 'Aktif' : 'Tamamlandı'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'physical':
+        return 'run';
+      case 'cognitive':
+        return 'brain';
+      case 'social':
+        return 'account-group';
+      case 'sensory':
+        return 'hand-heart';
+      default:
+        return 'star';
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Yükleniyor...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F3F4F6' }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.header, { backgroundColor: '#FFFFFF' }]}>
-          <View style={styles.headerContent}>
-            <View style={styles.userInfo}>
-              <IconButton
-                icon="account"
-                size={32}
-                iconColor="#007AFF"
-              />
-              <View style={styles.welcomeText}>
-                <Text variant="titleLarge" style={{ color: '#1F2937' }}>
-                  Hoş Geldiniz
-                </Text>
-                <Text variant="bodyMedium" style={{ color: '#6B7280' }}>
-                  Bugün nasıl hissediyorsunuz?
-                </Text>
-              </View>
-            </View>
-            <IconButton
-              icon="bell-outline"
-              size={24}
-              iconColor="#1F2937"
-              onPress={() => {}}
-            />
-          </View>
-        </View>
+    <View style={styles.container}>
+      <Text variant="headlineMedium" style={styles.title}>
+        Hoş Geldiniz, {user?.name}
+      </Text>
+      
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Günlük Aktiviteler</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {activities.map(renderActivityCard)}
+        </ScrollView>
+      </View>
 
-        <View style={styles.content}>
-          <Text 
-            variant="titleLarge" 
-            style={[styles.sectionTitle, { color: '#1F2937' }]}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Aktif Programlar</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {programs.map(renderProgramCard)}
+        </ScrollView>
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="contained"
+          onPress={() => navigation.navigate('Appointments')}
+          style={styles.button}
+        >
+          Randevularım
+        </Button>
+
+        {user?.role === 'danisan' && (
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate('CreateAppointment')}
+            style={styles.button}
           >
-            Aktiviteler
-          </Text>
-
-          <View style={styles.grid}>
-            {activities.map((activity) => (
-              <Card
-                key={activity.id}
-                style={[styles.card, { backgroundColor: '#FFFFFF' }]}
-                onPress={() => navigation.navigate(activity.screen)}
-                mode="elevated"
-              >
-                <Card.Content style={styles.cardContent}>
-                  <IconButton
-                    icon={activity.icon}
-                    size={32}
-                    iconColor="#007AFF"
-                    style={styles.cardIcon}
-                  />
-                  <Text variant="titleMedium" style={[styles.cardTitle, { color: '#1F2937' }]}>
-                    {activity.title}
-                  </Text>
-                  <Text variant="bodySmall" style={{ color: '#6B7280' }}>
-                    {activity.description}
-                  </Text>
-                </Card.Content>
-              </Card>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
-
-      <FAB
-        icon="plus"
-        style={[styles.fab, { backgroundColor: '#007AFF' }]}
-        onPress={() => {}}
-        color="#FFFFFF"
-      />
+            Yeni Randevu
+          </Button>
+        )}
+      </View>
     </View>
   );
 }
@@ -138,74 +176,78 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    paddingTop: 48,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  welcomeText: {
-    marginLeft: 8,
-  },
-  content: {
     padding: 16,
+    backgroundColor: '#f5f5f5',
   },
-  sectionTitle: {
-    marginTop: 16,
-    marginBottom: 16,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  card: {
-    width: '47%',
-    borderRadius: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardContent: {
-    alignItems: 'center',
-    gap: 8,
-    padding: 16,
-  },
-  cardIcon: {
-    margin: 0,
-  },
-  cardTitle: {
+  title: {
+    marginBottom: 24,
     textAlign: 'center',
   },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    elevation: 4,
+  section: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 15,
+    color: '#333333',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
+    width: 280,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 10,
+    color: '#333333',
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 5,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  cardDifficulty: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  cardDuration: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  cardProgress: {
+    fontSize: 12,
+    color: '#4A90E2',
+  },
+  cardStatus: {
+    fontSize: 12,
+    color: '#4CAF50',
+  },
+  buttonContainer: {
+    gap: 16,
+  },
+  button: {
+    paddingVertical: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 

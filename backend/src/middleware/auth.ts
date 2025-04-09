@@ -1,42 +1,33 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request } from 'express';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
 
-interface JwtPayload {
-  userId: string;
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: 'uzman' | 'danisan';
+    name: string;
+    _id?: string;
+  };
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
-}
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
+export const auth = async (req: AuthRequest, res: any, next: any) => {
   try {
-    // Token'ı header'dan al
     const token = req.header('Authorization')?.replace('Bearer ', '');
-
     if (!token) {
-      return res.status(401).json({ message: 'Yetkilendirme token\'ı bulunamadı' });
+      throw new Error();
     }
 
-    // Token'ı doğrula
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as {
+      id: string;
+      role: 'uzman' | 'danisan';
+      name: string;
+    };
 
-    // Kullanıcıyı bul
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      return res.status(401).json({ message: 'Geçersiz token' });
-    }
-
-    // Kullanıcıyı request nesnesine ekle
-    req.user = user;
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,
+      name: decoded.name
+    };
     next();
   } catch (error) {
     res.status(401).json({ message: 'Lütfen giriş yapın' });

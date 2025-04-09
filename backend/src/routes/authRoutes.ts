@@ -1,9 +1,11 @@
-import express from 'express';
-import { register, login } from '../controllers/authController';
+import express, { RequestHandler } from 'express';
+import { register, login, getMe } from '../controllers/authController';
+import { auth } from '../middleware/auth';
 
 const router = express.Router();
 
-router.post('/register', register as express.RequestHandler);
-router.post('/login', login as express.RequestHandler);
+router.post('/register', register as RequestHandler);
+router.post('/login', login as RequestHandler);
+router.get('/me', auth as RequestHandler, getMe as RequestHandler);
 
 export default router;

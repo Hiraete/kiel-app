@@ -1,92 +1,148 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
+import express, { Request, Response } from 'express';
 import { User } from '../models/User';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+const { body, validationResult } = require('express-validator');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Kayıt ol
-router.post('/register', async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
+interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+  role?: 'uzman' | 'danisan';
+}
 
-    // Kullanıcı adı veya email kontrolü
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
+interface LoginRequest {
+  email: string;
+  password: string;
+}
 
-    if (existingUser) {
-      return res.status(400).json({
-        message: 'Bu email veya kullanıcı adı zaten kullanılıyor',
+// Register route
+router.post(
+  '/register',
+  [
+    body('email').isEmail().withMessage('Geçerli bir email adresi giriniz'),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Şifre en az 6 karakter olmalıdır'),
+    body('name').not().isEmpty().withMessage('İsim alanı zorunludur'),
+  ],
+  async (req: Request<{}, {}, RegisterRequest>, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { email, password, name, role } = req.body;
+
+      // Check if user already exists
+      let user = await User.findOne({ email });
+      if (user) {
+        res.status(400).json({ message: 'Bu email adresi zaten kullanımda' });
+        return;
+      }
+
+      // Create new user
+      user = new User({
+        email,
+        password,
+        name,
+        role: role || 'danisan',
+        profile: {
+          preferences: {
+            notifications: true,
+            language: 'tr',
+            theme: 'light',
+          },
+        },
       });
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+
+      await user.save();
+
+      // Create JWT token
+      const payload = {
+        user: {
+          id: user.id,
+          role: user.role,
+        },
+      };
+
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '1h' },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
+    } catch (error: any) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
     }
-
-    // Yeni kullanıcı oluşturma
-    const user = new User({
-      username,
-      email,
-      password,
-    });
-
-    await user.save();
-
-    // JWT token oluşturma
-    const token = jwt.sign(
-      { userId: user._id },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    console.error('Kayıt hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
   }
-});
+);
 
-// Giriş yap
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// Login route
+router.post(
+  '/login',
+  [
+    body('email').isEmail().withMessage('Geçerli bir email adresi giriniz'),
+    body('password').exists().withMessage('Şifre alanı zorunludur'),
+  ],
+  async (req: Request<{}, {}, LoginRequest>, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
 
-    // Kullanıcıyı bul
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Geçersiz email veya şifre' });
+      const { email, password } = req.body;
+
+      // Check if user exists
+      let user = await User.findOne({ email });
+      if (!user) {
+        res.status(400).json({ message: 'Geçersiz kullanıcı bilgileri' });
+        return;
+      }
+
+      // Check password
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        res.status(400).json({ message: 'Geçersiz kullanıcı bilgileri' });
+        return;
+      }
+
+      // Create JWT token
+      const payload = {
+        user: {
+          id: user.id,
+          role: user.role,
+        },
+      };
+
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '1h' },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
+    } catch (error: any) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
     }
-
-    // Şifreyi kontrol et
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Geçersiz email veya şifre' });
-    }
-
-    // JWT token oluştur
-    const token = jwt.sign(
-      { userId: user._id },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    console.error('Giriş hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
   }
-});
+);
 
-export default router; 
+export default router;

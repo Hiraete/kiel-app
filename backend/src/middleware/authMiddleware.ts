@@ -1,7 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
+interface DecodedToken {
+  user: {
+    id: string;
+    role: 'uzman' | 'danisan';
+  };
+}
+
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: 'uzman' | 'danisan';
+  };
+}
+
+export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
   try {
     const authHeader = req.headers['authorization'];
     console.log('Auth header:', authHeader);
@@ -28,10 +42,10 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'defaultsecret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'defaultsecret') as DecodedToken;
     console.log('Decoded token:', decoded);
     
-    (req as any).user = decoded;
+    req.user = decoded.user;
     next();
   } catch (error: any) {
     console.error('Token doğrulama hatası:', error);

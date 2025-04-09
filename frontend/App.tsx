@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import AppNavigator from './src/navigation/AppNavigator';
+import { ActivityIndicator, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { userService } from './src/services/userService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
-import AppNavigator from './src/navigation/AppNavigator';
-import { AuthProvider } from './src/contexts/AuthContext';
 
 const theme = {
   ...MD3LightTheme,
@@ -29,14 +33,52 @@ const theme = {
   roundness: 12,
 };
 
-export default function App() {
+const AuthWrapper = () => {
+  const { user, setUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const userData = await userService.getProfile();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Auth kontrolü sırasında hata:', error);
+        await AsyncStorage.removeItem('token');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  return <AppNavigator />;
+};
+
+const App = () => {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <PaperProvider theme={theme}>
-          <AppNavigator />
-        </PaperProvider>
-      </AuthProvider>
+      <PaperProvider theme={theme}>
+        <AuthProvider>
+          <NavigationContainer>
+            <AuthWrapper />
+          </NavigationContainer>
+        </AuthProvider>
+      </PaperProvider>
     </SafeAreaProvider>
   );
-}
+};
+
+export default App;

@@ -1,58 +1,38 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from './userService';
 
-// Geliştirme ortamı için IP adresini kullanıyoruz
-const API_URL = 'http://192.168.1.117:5000/api';
+// Geliştirme ortamı için localhost kullanıyoruz
+const API_URL = 'http://localhost:3000/api';
 
 // Axios instance oluşturma
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
+  },
 });
 
-// Request interceptor - her istekte token kontrolü
+// Request interceptor - her istekte token'ı ekle
 api.interceptors.request.use(
   async (config) => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      console.log('Request config:', {
-        url: config.url,
-        method: config.method,
-        headers: config.headers,
-        data: config.data
-      });
-      return config;
-    } catch (error) {
-      console.error('Request interceptor error:', error);
-      return config;
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor - hata yönetimi
+// Response interceptor - hata durumunda token'ı temizle
 api.interceptors.response.use(
-  (response) => {
-    console.log('Response:', {
-      status: response.status,
-      data: response.data
-    });
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    console.error('Response error:', error.response?.data || error.message);
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
+      await AsyncStorage.removeItem('token');
     }
     return Promise.reject(error);
   }
@@ -61,12 +41,16 @@ api.interceptors.response.use(
 // Auth servisleri
 export const authService = {
   // Kayıt olma
-  register: async (userData: { username: string; email: string; password: string }) => {
+  register: async (userData: { 
+    name: string;
+    email: string; 
+    password: string;
+    role: 'uzman' | 'danisan';
+  }) => {
     try {
       const response = await api.post('/auth/register', userData);
       if (response.data.token) {
-        await AsyncStorage.setItem('userToken', response.data.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+        await AsyncStorage.setItem('token', response.data.token);
       }
       return response.data;
     } catch (error: any) {
@@ -76,12 +60,11 @@ export const authService = {
   },
 
   // Giriş yapma
-  login: async (credentials: { email: string; password: string }) => {
+  login: async (email: string, password: string, role: 'uzman' | 'danisan') => {
     try {
-      const response = await api.post('/auth/login', credentials);
+      const response = await api.post('/auth/login', { email, password, role });
       if (response.data.token) {
-        await AsyncStorage.setItem('userToken', response.data.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+        await AsyncStorage.setItem('token', response.data.token);
       }
       return response.data;
     } catch (error: any) {
@@ -93,26 +76,57 @@ export const authService = {
   // Çıkış yapma
   logout: async () => {
     try {
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
+      await AsyncStorage.removeItem('token');
     } catch (error: any) {
       console.error('Logout error:', error);
       throw error;
     }
   },
+};
 
-  // Mevcut kullanıcı bilgilerini getirme
-  getCurrentUser: async () => {
-    try {
-      const userDataStr = await AsyncStorage.getItem('userData');
-      const token = await AsyncStorage.getItem('userToken');
-      if (!userDataStr || !token) return null;
-      return JSON.parse(userDataStr);
-    } catch (error: any) {
-      console.error('Get current user error:', error);
-      return null;
-    }
+// Kullanıcı işlemleri
+export const userService = {
+  // Profil güncelleme
+  updateProfile: async (profileData: Partial<User['profile']>) => {
+    const response = await api.patch('/users/profile', profileData);
+    return response.data;
+  },
+
+  // Uzman profil güncelleme
+  updateExpertProfile: async (expertProfileData: User['profile']['expertProfile']) => {
+    const response = await api.patch('/users/expert-profile', expertProfileData);
+    return response.data;
+  },
+
+  // Profil bilgilerini getirme
+  getProfile: async () => {
+    const response = await api.get('/users/profile');
+    return response.data;
+  },
+
+  // Uzmanları getirme
+  getExperts: async () => {
+    const response = await api.get('/users/experts');
+    return response.data;
   },
 };
 
-export default api; 
+// Randevu işlemleri
+export const appointmentService = {
+  createAppointment: async (appointmentData: any) => {
+    const response = await api.post('/appointments', appointmentData);
+    return response.data;
+  },
+
+  getAppointments: async () => {
+    const response = await api.get('/appointments');
+    return response.data;
+  },
+
+  updateAppointmentStatus: async (appointmentId: string, status: string) => {
+    const response = await api.patch(`/appointments/${appointmentId}/status`, { status });
+    return response.data;
+  },
+};
+
+export default api;

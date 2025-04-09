@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import HomeScreen from '../screens/HomeScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import DailyActivityScreen from '../screens/DailyActivityScreen';
 import ExercisesScreen from '../screens/ExercisesScreen';
 import GamesScreen from '../screens/GamesScreen';
@@ -10,6 +10,9 @@ import ProfileScreen from '../screens/ProfileScreen';
 import ForumScreen from '../screens/ForumScreen';
 import ConsultationScreen from '../screens/ConsultationScreen';
 import type { MainTabParamList } from './types';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import ForumsScreen from '../screens/ForumsScreen';
+import ConsultationsScreen from '../screens/ConsultationsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -31,80 +34,80 @@ export default function MainNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home" color={color} size={size} />
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
+          tabBarLabel: 'Ana Sayfa',
         }}
       />
       <Tab.Screen
         name="DailyActivity"
         component={DailyActivityScreen}
         options={{
-          tabBarLabel: 'Aktivite',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="calendar-today" color={color} size={size} />
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
+          tabBarLabel: 'Günlük Aktivite',
         }}
       />
       <Tab.Screen
         name="Exercises"
         component={ExercisesScreen}
         options={{
-          tabBarLabel: 'Egzersiz',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="run" color={color} size={size} />
+            <Ionicons name="fitness-outline" size={size} color={color} />
           ),
+          tabBarLabel: 'Egzersizler',
         }}
       />
       <Tab.Screen
         name="Games"
         component={GamesScreen}
         options={{
-          tabBarLabel: 'Oyunlar',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="gamepad-variant" color={color} size={size} />
+            <Ionicons name="game-controller-outline" size={size} color={color} />
           ),
+          tabBarLabel: 'Oyunlar',
         }}
       />
       <Tab.Screen
         name="Reports"
         component={ReportsScreen}
         options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bar-chart-outline" size={size} color={color} />
+          ),
           tabBarLabel: 'Raporlar',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-line" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Forum"
-        component={ForumScreen}
-        options={{
-          tabBarLabel: 'Forum',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="forum" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Consultation"
-        component={ConsultationScreen}
-        options={{
-          tabBarLabel: 'Görüşme',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="message-text" color={color} size={size} />
-          ),
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" color={color} size={size} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
+          tabBarLabel: 'Profil',
+        }}
+      />
+      <Tab.Screen
+        name="Forums"
+        component={ForumsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
+          ),
+          tabBarLabel: 'Forumlar',
+        }}
+      />
+      <Tab.Screen
+        name="Consultations"
+        component={ConsultationsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
+          tabBarLabel: 'Danışmanlıklar',
         }}
       />
     </Tab.Navigator>

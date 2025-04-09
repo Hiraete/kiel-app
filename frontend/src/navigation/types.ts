@@ -1,16 +1,17 @@
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  Main: undefined;
+  MainStack: undefined;
+  MainTabs: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
-  DailyActivity: undefined;
-  Exercises: undefined;
+  DailyActivity: { programId: string };
+  Exercises: { activityId: string };
   Games: undefined;
   Reports: undefined;
   Profile: undefined;
-  Forum: undefined;
-  Consultation: undefined;
+  Forums: undefined;
+  Consultations: undefined;
 }; 
