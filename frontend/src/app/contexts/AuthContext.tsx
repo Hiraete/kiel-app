@@ -4,16 +4,17 @@ import { authService } from '../../services/api';
 
 interface User {
   id: string;
-  username: string;
+  name: string;
   email: string;
+  role: 'uzman' | 'danisan';
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role: 'uzman' | 'danisan') => Promise<void>;
+  register: (name: string, email: string, password: string, role: 'uzman' | 'danisan') => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
 }
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
-      const storedToken = await AsyncStorage.getItem('userToken');
+      const storedToken = await AsyncStorage.getItem('token');
 
       if (currentUser && storedToken) {
         setUser(currentUser);
@@ -54,9 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, role: 'uzman' | 'danisan') => {
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.login(email, password, role);
       setUser(response.user);
       setToken(response.token);
     } catch (error: any) {
@@ -65,9 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, role: 'uzman' | 'danisan') => {
     try {
-      const response = await authService.register({ username, email, password });
+      const response = await authService.register({ name, email, password, role });
       setUser(response.user);
       setToken(response.token);
     } catch (error: any) {

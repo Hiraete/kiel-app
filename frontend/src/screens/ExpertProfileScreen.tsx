@@ -19,33 +19,46 @@ interface TimeSlot {
 }
 
 interface ExpertProfile {
-  specialties: string[];
-  experience: string;
-  education: string;
-  certificates: string[];
-  availability: {
-    [key: string]: TimeSlot[];
-  };
+  title: string;
+  specialization: string[];
+  experience: number;
   rating: number;
   totalReviews: number;
+  availability: {
+    monday: TimeSlot[];
+    tuesday: TimeSlot[];
+    wednesday: TimeSlot[];
+    thursday: TimeSlot[];
+    friday: TimeSlot[];
+    saturday: TimeSlot[];
+    sunday: TimeSlot[];
+  };
 }
 
-const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+type Day = typeof DAYS[number];
 
 export const ExpertProfileScreen = () => {
   const { user } = useAuth();
   const [expertProfile, setExpertProfile] = useState<ExpertProfile>({
-    specialties: [],
-    experience: '',
-    education: '',
-    certificates: [],
-    availability: {},
+    title: '',
+    specialization: [],
+    experience: 0,
     rating: 0,
     totalReviews: 0,
+    availability: {
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      sunday: [],
+    },
   });
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Day | null>(null);
   const [newTimeSlot, setNewTimeSlot] = useState<TimeSlot>({ start: '', end: '' });
 
   useEffect(() => {
@@ -83,16 +96,12 @@ export const ExpertProfileScreen = () => {
     if (!selectedDay || !newTimeSlot.start || !newTimeSlot.end) return;
 
     const updatedProfile = { ...expertProfile };
-    if (!updatedProfile.availability[selectedDay]) {
-      updatedProfile.availability[selectedDay] = [];
-    }
-
     updatedProfile.availability[selectedDay].push({ ...newTimeSlot });
     setExpertProfile(updatedProfile);
     setNewTimeSlot({ start: '', end: '' });
   };
 
-  const removeTimeSlot = (day: string, index: number) => {
+  const removeTimeSlot = (day: Day, index: number) => {
     const updatedProfile = { ...expertProfile };
     updatedProfile.availability[day].splice(index, 1);
     setExpertProfile(updatedProfile);
@@ -131,7 +140,7 @@ export const ExpertProfileScreen = () => {
               </View>
             )}
             <View style={styles.timeSlots}>
-              {expertProfile.availability[day]?.map((slot, index) => (
+              {expertProfile.availability[day].map((slot: TimeSlot, index: number) => (
                 <View key={index} style={styles.timeSlot}>
                   <Text style={styles.timeSlotText}>
                     {slot.start} - {slot.end}
@@ -160,18 +169,18 @@ export const ExpertProfileScreen = () => {
         {isEditing ? (
           <TextInput
             style={styles.input}
-            value={expertProfile.specialties.join(', ')}
+            value={expertProfile.specialization.join(', ')}
             onChangeText={(text) =>
               setExpertProfile({
                 ...expertProfile,
-                specialties: text.split(',').map((s) => s.trim()),
+                specialization: text.split(',').map((s) => s.trim()),
               })
             }
             placeholder="Uzmanlık alanlarını virgülle ayırarak girin"
           />
         ) : (
           <View style={styles.tags}>
-            {expertProfile.specialties.map((specialty, index) => (
+            {expertProfile.specialization.map((specialty, index) => (
               <View key={index} style={styles.tag}>
                 <Text style={styles.tagText}>{specialty}</Text>
               </View>
@@ -189,67 +198,60 @@ export const ExpertProfileScreen = () => {
         {isEditing ? (
           <TextInput
             style={[styles.input, styles.textArea]}
-            value={expertProfile.experience}
+            value={expertProfile.experience.toString()}
             onChangeText={(text) =>
-              setExpertProfile({ ...expertProfile, experience: text })
+              setExpertProfile({ ...expertProfile, experience: parseInt(text) })
             }
             multiline
             numberOfLines={4}
             placeholder="Deneyimlerinizi girin"
           />
         ) : (
-          <Text style={styles.text}>{expertProfile.experience}</Text>
+          <Text style={styles.text}>{expertProfile.experience.toString()}</Text>
         )}
       </View>
     );
   };
 
-  const renderEducation = () => {
+  const renderRating = () => {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Eğitim</Text>
+        <Text style={styles.sectionTitle}>Rating</Text>
         {isEditing ? (
           <TextInput
             style={[styles.input, styles.textArea]}
-            value={expertProfile.education}
+            value={expertProfile.rating.toString()}
             onChangeText={(text) =>
-              setExpertProfile({ ...expertProfile, education: text })
+              setExpertProfile({ ...expertProfile, rating: parseInt(text) })
             }
             multiline
             numberOfLines={4}
-            placeholder="Eğitim bilgilerinizi girin"
+            placeholder="Rating girin"
           />
         ) : (
-          <Text style={styles.text}>{expertProfile.education}</Text>
+          <Text style={styles.text}>{expertProfile.rating.toString()}</Text>
         )}
       </View>
     );
   };
 
-  const renderCertificates = () => {
+  const renderTotalReviews = () => {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Sertifikalar</Text>
+        <Text style={styles.sectionTitle}>Toplam İncelemeler</Text>
         {isEditing ? (
           <TextInput
-            style={styles.input}
-            value={expertProfile.certificates.join(', ')}
+            style={[styles.input, styles.textArea]}
+            value={expertProfile.totalReviews.toString()}
             onChangeText={(text) =>
-              setExpertProfile({
-                ...expertProfile,
-                certificates: text.split(',').map((c) => c.trim()),
-              })
+              setExpertProfile({ ...expertProfile, totalReviews: parseInt(text) })
             }
-            placeholder="Sertifikaları virgülle ayırarak girin"
+            multiline
+            numberOfLines={4}
+            placeholder="Toplam incelemeler girin"
           />
         ) : (
-          <View style={styles.tags}>
-            {expertProfile.certificates.map((certificate, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{certificate}</Text>
-              </View>
-            ))}
-          </View>
+          <Text style={styles.text}>{expertProfile.totalReviews.toString()}</Text>
         )}
       </View>
     );
@@ -279,8 +281,8 @@ export const ExpertProfileScreen = () => {
 
       {renderSpecialties()}
       {renderExperience()}
-      {renderEducation()}
-      {renderCertificates()}
+      {renderRating()}
+      {renderTotalReviews()}
       {renderAvailability()}
 
       {isEditing && (

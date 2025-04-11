@@ -26,7 +26,16 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>({
+    _id: 'test-id',
+    name: 'Test Kullanıcı',
+    email: 'test@example.com',
+    role: 'danisan',
+    profile: {
+      phone: '',
+      address: ''
+    }
+  });
 
   const login = async (email: string, password: string, role: 'uzman' | 'danisan') => {
     try {

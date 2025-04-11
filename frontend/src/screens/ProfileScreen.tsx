@@ -53,11 +53,36 @@ interface Profile {
   address?: string;
   birthDate?: string;
   gender?: 'erkek' | 'kiz';
+  profileImage?: string;
   preferences?: {
     notifications: boolean;
     language: string;
     theme: string;
   };
+  expertProfile?: {
+    title: string;
+    specialization: string[];
+    experience: number;
+    rating: number;
+    totalReviews: number;
+    availability: {
+      monday: { start: string; end: string; }[];
+      tuesday: { start: string; end: string; }[];
+      wednesday: { start: string; end: string; }[];
+      thursday: { start: string; end: string; }[];
+      friday: { start: string; end: string; }[];
+      saturday: { start: string; end: string; }[];
+      sunday: { start: string; end: string; }[];
+    };
+  };
+  childProfiles?: Array<{
+    name: string;
+    birthDate: string;
+    gender: 'erkek' | 'kiz';
+    autismLevel: string;
+    interests: string[];
+    developmentAreas: string[];
+  }>;
 }
 
 export const ProfileScreen = () => {

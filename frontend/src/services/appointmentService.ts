@@ -26,14 +26,17 @@ interface CreateAppointmentPayload {
   startTime: string;
   endTime: string;
   notes?: string;
+  status?: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
 }
 
 interface AppointmentFilter {
-  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status?: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
   expertId?: string;
   clientId?: string;
   startDate?: string;
   endDate?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const appointmentService = {

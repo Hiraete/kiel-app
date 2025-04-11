@@ -26,7 +26,7 @@ export const createProgram = async (req: AuthRequest, res: Response) => {
 };
 
 // Tüm programları getir
-export const getPrograms = async (req: Request, res: Response) => {
+export const getPrograms = async (_req: Request, res: Response): Promise<void> => {
   try {
     const programs = await Program.find()
       .sort({ createdAt: -1 })
@@ -39,14 +39,15 @@ export const getPrograms = async (req: Request, res: Response) => {
 };
 
 // Tek bir programı getir
-export const getProgram = async (req: Request, res: Response) => {
+export const getProgram = async (req: Request, res: Response): Promise<void> => {
   try {
     const program = await Program.findById(req.params.id)
       .populate('createdBy', 'name')
       .populate('activities.activityId');
     
     if (!program) {
-      return res.status(404).json({ message: 'Program bulunamadı' });
+      res.status(404).json({ message: 'Program bulunamadı' });
+      return;
     }
     res.json(program);
   } catch (error: any) {
@@ -56,16 +57,18 @@ export const getProgram = async (req: Request, res: Response) => {
 };
 
 // Programı güncelle
-export const updateProgram = async (req: AuthRequest, res: Response) => {
+export const updateProgram = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const program = await Program.findById(req.params.id);
     
     if (!program) {
-      return res.status(404).json({ message: 'Program bulunamadı' });
+      res.status(404).json({ message: 'Program bulunamadı' });
+      return;
     }
 
     if (program.createdBy.toString() !== req.user?.id) {
-      return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      return;
     }
 
     const updatedProgram = await Program.findByIdAndUpdate(
@@ -82,16 +85,18 @@ export const updateProgram = async (req: AuthRequest, res: Response) => {
 };
 
 // Programı sil
-export const deleteProgram = async (req: AuthRequest, res: Response) => {
+export const deleteProgram = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const program = await Program.findById(req.params.id);
     
     if (!program) {
-      return res.status(404).json({ message: 'Program bulunamadı' });
+      res.status(404).json({ message: 'Program bulunamadı' });
+      return;
     }
 
     if (program.createdBy.toString() !== req.user?.id) {
-      return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      return;
     }
 
     await program.deleteOne();
@@ -103,16 +108,18 @@ export const deleteProgram = async (req: AuthRequest, res: Response) => {
 };
 
 // Program ilerlemesini güncelle
-export const updateProgress = async (req: AuthRequest, res: Response) => {
+export const updateProgress = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const program = await Program.findById(req.params.id);
     
     if (!program) {
-      return res.status(404).json({ message: 'Program bulunamadı' });
+      res.status(404).json({ message: 'Program bulunamadı' });
+      return;
     }
 
     if (!req.user?.id) {
-      return res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      return;
     }
 
     const { activityId, completed, notes } = req.body;
@@ -122,7 +129,8 @@ export const updateProgress = async (req: AuthRequest, res: Response) => {
     );
 
     if (!activityExists) {
-      return res.status(404).json({ message: 'Aktivite bulunamadı' });
+      res.status(404).json({ message: 'Aktivite bulunamadı' });
+      return;
     }
 
     const existingProgress = program.progress.find(

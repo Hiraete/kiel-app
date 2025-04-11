@@ -10,16 +10,17 @@ interface AuthRequest extends Request {
 }
 
 interface ChildProfile {
+  id: string;
   name: string;
   birthDate: string;
   gender: 'erkek' | 'kiz';
-  autismLevel: string;
+  autismLevel: 'hafif' | 'orta' | 'agir';
   interests: string[];
   developmentAreas: string[];
 }
 
 // Profil bilgilerini getir
-export const getProfile = async (req: AuthRequest, res: Response) => {
+export const getProfile = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -31,41 +32,40 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
     }
 
-    res.json(user);
-  } catch (error: any) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
+    return res.json(user);
+  } catch (error) {
+    console.error('Profil getirme hatası:', error);
+    return res.status(500).json({ message: 'Sunucu hatası' });
   }
 };
 
 // Profil bilgilerini güncelle
-export const updateProfile = async (req: AuthRequest, res: Response) => {
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ message: 'Yetkilendirme gerekli' });
     }
 
-    const { name, email } = req.body;
     const user = await User.findById(userId);
-
     if (!user) {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
     }
 
+    const { name, email } = req.body;
     if (name) user.name = name;
     if (email) user.email = email;
 
     await user.save();
-    res.json(user);
-  } catch (error: any) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
+    return res.json(user);
+  } catch (error) {
+    console.error('Profil güncelleme hatası:', error);
+    return res.status(500).json({ message: 'Sunucu hatası' });
   }
 };
 
 // Çocuk profili ekle
-export const addChildProfile = async (req: AuthRequest, res: Response) => {
+export const addChildProfile = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -77,7 +77,12 @@ export const addChildProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
     }
 
+    if (!user.profile.childProfiles) {
+      user.profile.childProfiles = [];
+    }
+
     const childData: ChildProfile = {
+      id: new Date().getTime().toString(),
       name: req.body.name,
       birthDate: req.body.birthDate,
       gender: req.body.gender,
@@ -86,41 +91,37 @@ export const addChildProfile = async (req: AuthRequest, res: Response) => {
       developmentAreas: req.body.developmentAreas || [],
     };
 
-    if (!user.childProfiles) {
-      user.childProfiles = [];
-    }
-
-    user.childProfiles.push(childData);
+    user.profile.childProfiles.push(childData);
     await user.save();
 
-    res.json(user.childProfiles);
-  } catch (error: any) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
+    return res.json(user.profile.childProfiles);
+  } catch (error) {
+    console.error('Çocuk profili ekleme hatası:', error);
+    return res.status(500).json({ message: 'Sunucu hatası' });
   }
 };
 
 // Çocuk profili güncelle
-export const updateChildProfile = async (req: AuthRequest, res: Response) => {
+export const updateChildProfile = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ message: 'Yetkilendirme gerekli' });
     }
 
+    const { childId } = req.params;
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
     }
 
-    if (!user.childProfiles) {
+    if (!user.profile.childProfiles) {
       return res.status(404).json({ message: 'Çocuk profili bulunamadı' });
     }
 
-    const childIndex = user.childProfiles.findIndex(
-      (child) => child.name === req.params.childName
+    const childIndex = user.profile.childProfiles.findIndex(
+      (child: ChildProfile) => child.id === childId
     );
-
     if (childIndex === -1) {
       return res.status(404).json({ message: 'Çocuk profili bulunamadı' });
     }
@@ -134,44 +135,45 @@ export const updateChildProfile = async (req: AuthRequest, res: Response) => {
       developmentAreas: req.body.developmentAreas,
     };
 
-    user.childProfiles[childIndex] = {
-      ...user.childProfiles[childIndex],
+    user.profile.childProfiles[childIndex] = {
+      ...user.profile.childProfiles[childIndex],
       ...updatedChildData,
     } as ChildProfile;
 
     await user.save();
-    res.json(user.childProfiles[childIndex]);
-  } catch (error: any) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
+    return res.json(user.profile.childProfiles[childIndex]);
+  } catch (error) {
+    console.error('Çocuk profili güncelleme hatası:', error);
+    return res.status(500).json({ message: 'Sunucu hatası' });
   }
 };
 
 // Çocuk profili sil
-export const deleteChildProfile = async (req: AuthRequest, res: Response) => {
+export const deleteChildProfile = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ message: 'Yetkilendirme gerekli' });
     }
 
+    const { childId } = req.params;
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
     }
 
-    if (!user.childProfiles) {
+    if (!user.profile.childProfiles) {
       return res.status(404).json({ message: 'Çocuk profili bulunamadı' });
     }
 
-    user.childProfiles = user.childProfiles.filter(
-      (child) => child.name !== req.params.childName
+    user.profile.childProfiles = user.profile.childProfiles.filter(
+      (child: ChildProfile) => child.id !== childId
     );
 
     await user.save();
-    res.json({ message: 'Çocuk profili başarıyla silindi' });
-  } catch (error: any) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
+    return res.json({ message: 'Çocuk profili silindi' });
+  } catch (error) {
+    console.error('Çocuk profili silme hatası:', error);
+    return res.status(500).json({ message: 'Sunucu hatası' });
   }
 }; 

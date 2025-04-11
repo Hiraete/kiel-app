@@ -31,7 +31,7 @@ export default function AppointmentsScreen() {
 
   const handleStatusChange = async (id: string, status: Appointment['status']) => {
     try {
-      await appointmentService.updateAppointmentStatus(id, status);
+      await appointmentService.updateAppointment(id, { status });
       fetchAppointments();
     } catch (error) {
       console.error('Randevu durumu güncellenemedi:', error);

@@ -4,18 +4,28 @@
     "strict": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "jsx": "react-native",
+    "jsx": "preserve",
     "allowJs": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": [
+        "./*"
+      ]
+    },
+    "incremental": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

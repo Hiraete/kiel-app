@@ -1,13 +1,8 @@
-import express, { Express, Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import express, { Request, Response, ErrorRequestHandler } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
-import userRoutes from './routes/user';
-import appointmentRoutes from './routes/appointment';
-import activityRoutes from './routes/activityRoutes';
-import profileRoutes from './routes/profileRoutes';
-import programRoutes from './routes/programRoutes';
 
 dotenv.config();
 
@@ -37,11 +32,6 @@ connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/appointment', appointmentRoutes);
-app.use('/api/activity', activityRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/program', programRoutes);
 
 app.get('/', (_: Request, res: Response) => {
   res.json({ message: 'KielApp API çalışıyor' });
@@ -74,7 +64,7 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
 app.use(errorHandler);
 
-const PORT: string | number = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Sunucu ${PORT} portunda çalışıyor`);
 });

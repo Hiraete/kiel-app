@@ -10,14 +10,13 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { MainTabParamList } from '../navigation/types';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { Activity, Program, RootStackParamList } from '../types/index';
+import { RootStackParamList } from '../navigation/types';
+import { Activity, Program } from '../types/index';
 import api from '../services/api';
 import { Button } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -58,7 +57,18 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={activity._id}
       style={styles.card}
-      onPress={() => navigation.navigate('Exercises', { activityId: activity._id })}
+      onPress={() => {
+        switch (activity.type) {
+          case 'sensory':
+            navigation.navigate('SensoryGame');
+            break;
+          case 'social':
+            navigation.navigate('SocialInteraction');
+            break;
+          default:
+            navigation.navigate('Exercises', { activityId: activity._id });
+        }
+      }}
     >
       <MaterialCommunityIcons
         name={getActivityIcon(activity.type)}
@@ -84,7 +94,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={program._id}
       style={styles.card}
-      onPress={() => navigation.navigate('DailyActivity', { programId: program._id })}
+      onPress={() => navigation.navigate('DailyProgram')}
     >
       <MaterialCommunityIcons
         name="calendar-check"
@@ -106,7 +116,7 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const getActivityIcon = (type: string) => {
+  const getActivityIcon = (type: string): keyof typeof MaterialCommunityIcons.glyphMap => {
     switch (type) {
       case 'physical':
         return 'run';

@@ -31,7 +31,7 @@ interface Expert {
   };
 }
 
-const CreateAppointmentScreen = () => {
+export const CreateAppointmentScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);

@@ -28,6 +28,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "expo": "~50.0.5",
+    "expo-image-picker": "^16.0.6",
     "expo-screen-capture": "~5.8.1",
     "expo-status-bar": "~1.11.1",
     "express": "^4.21.2",

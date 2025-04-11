@@ -51,7 +51,10 @@ const AppointmentScreen = () => {
 
   const loadAppointments = useCallback(async (pageNum: number = 1, shouldRefresh: boolean = false) => {
     try {
-      const response = await appointmentService.getAppointments(pageNum);
+      const response = await appointmentService.getAppointments({
+        page: pageNum,
+        limit: 10
+      });
       const newAppointments = response.appointments;
       
       if (shouldRefresh) {
@@ -95,7 +98,7 @@ const AppointmentScreen = () => {
 
   const handleCancel = async (appointmentId: string) => {
     try {
-      await appointmentService.updateAppointmentStatus(appointmentId, 'cancelled');
+      await appointmentService.updateAppointment(appointmentId, { status: 'cancelled' });
       setAppointments(prev =>
         prev.map(apt => 
           apt._id === appointmentId ? { ...apt, status: 'cancelled' } : apt

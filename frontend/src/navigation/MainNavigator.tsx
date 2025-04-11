@@ -1,12 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { HomeScreen } from '../screens/HomeScreen';
+import HomeScreen from '../screens/HomeScreen';
 import DailyActivityScreen from '../screens/DailyActivityScreen';
 import ExercisesScreen from '../screens/ExercisesScreen';
 import GamesScreen from '../screens/GamesScreen';
 import ReportsScreen from '../screens/ReportsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import ForumScreen from '../screens/ForumScreen';
 import ConsultationScreen from '../screens/ConsultationScreen';
 import type { MainTabParamList } from './types';

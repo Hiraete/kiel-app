@@ -14,6 +14,8 @@ export interface IAppointment extends Document {
   endTime: string;
   notes?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  rating?: number;
+  review?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,10 +37,12 @@ const appointmentSchema = new Schema({
     type: String,
     enum: ['pending', 'accepted', 'rejected', 'completed', 'cancelled'],
     default: 'pending'
-  }
-}, {
-  timestamps: true
-});
+  },
+  rating: { type: Number },
+  review: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
 
 // Randevu çakışmalarını kontrol etmek için index
 appointmentSchema.index({ expert: 1, date: 1, startTime: 1 }, { unique: true });

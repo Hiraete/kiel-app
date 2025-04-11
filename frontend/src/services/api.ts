@@ -49,12 +49,9 @@ export const authService = {
   }) => {
     try {
       const response = await api.post('/auth/register', userData);
-      if (response.data.token) {
-        await AsyncStorage.setItem('token', response.data.token);
-      }
+      await AsyncStorage.setItem('token', response.data.token);
       return response.data;
-    } catch (error: any) {
-      console.error('Register error:', error.response?.data || error.message);
+    } catch (error) {
       throw error;
     }
   },
@@ -63,12 +60,9 @@ export const authService = {
   login: async (email: string, password: string, role: 'uzman' | 'danisan') => {
     try {
       const response = await api.post('/auth/login', { email, password, role });
-      if (response.data.token) {
-        await AsyncStorage.setItem('token', response.data.token);
-      }
+      await AsyncStorage.setItem('token', response.data.token);
       return response.data;
-    } catch (error: any) {
-      console.error('Login error:', error.response?.data || error.message);
+    } catch (error) {
       throw error;
     }
   },
@@ -77,11 +71,20 @@ export const authService = {
   logout: async () => {
     try {
       await AsyncStorage.removeItem('token');
-    } catch (error: any) {
-      console.error('Logout error:', error);
+    } catch (error) {
       throw error;
     }
   },
+
+  // Mevcut kullanıcıyı getir
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
 
 // Kullanıcı işlemleri

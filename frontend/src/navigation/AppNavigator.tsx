@@ -10,11 +10,15 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ExpertProfileScreen } from '../screens/ExpertProfileScreen';
-import { HomeScreen } from '../screens/HomeScreen';
-import { AppointmentScreen } from '../screens/AppointmentScreen';
+import HomeScreen from '../screens/HomeScreen';
+import AppointmentScreen from '../screens/AppointmentScreen';
 import { CreateAppointmentScreen } from '../screens/CreateAppointmentScreen';
-import { NotificationsScreen } from '../screens/NotificationsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
+import OtherScreen from '../screens/OtherScreen';
+import SensoryGameScreen from '../screens/SensoryGameScreen';
+import SocialInteractionScreen from '../screens/SocialInteractionScreen';
+import DailyProgramScreen from '../screens/DailyProgramScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +40,8 @@ const MainTabs = () => {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Notifications') {
             iconName = focused ? 'notifications' : 'notifications-outline';
+          } else if (route.name === 'Other') {
+            iconName = focused ? 'apps' : 'apps-outline';
           } else {
             iconName = 'help-circle-outline';
           }
@@ -49,6 +55,7 @@ const MainTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Ana Sayfa' }} />
       <Tab.Screen name="Appointments" component={AppointmentsScreen} options={{ title: 'Randevular' }} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Bildirimler' }} />
+      <Tab.Screen name="Other" component={OtherScreen} options={{ title: 'Diğer' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
     </Tab.Navigator>
   );
@@ -90,6 +97,21 @@ const AppNavigator = () => {
             name="CreateAppointment"
             component={CreateAppointmentScreen}
             options={{ title: 'Randevu Oluştur' }}
+          />
+          <Stack.Screen
+            name="SensoryGame"
+            component={SensoryGameScreen}
+            options={{ title: 'Duyusal Oyun' }}
+          />
+          <Stack.Screen
+            name="SocialInteraction"
+            component={SocialInteractionScreen}
+            options={{ title: 'Sosyal Etkileşim' }}
+          />
+          <Stack.Screen
+            name="DailyProgram"
+            component={DailyProgramScreen}
+            options={{ title: 'Günlük Program' }}
           />
         </>
       )}
