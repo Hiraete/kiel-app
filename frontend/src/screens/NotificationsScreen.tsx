@@ -1,121 +1,126 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, Title, Paragraph, Button, ActivityIndicator } from 'react-native-paper';
-import { notificationService } from '../services/notificationService';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Notification } from '../types';
+import api from '../services/api';
 
-const NotificationsScreen = () => {
+const NotificationsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchNotifications = async () => {
     try {
-      const response = await notificationService.getNotifications();
-      setNotifications(response.notifications);
+      const response = await api.get('/notifications');
+      setNotifications(response.data);
     } catch (error) {
-      console.error('Bildirimler alınamadı:', error);
-    } finally {
-      setLoading(false);
+      console.error('Bildirimler yüklenirken hata oluştu:', error);
     }
   };
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchNotifications().finally(() => setRefreshing(false));
+  }, []);
 
   useEffect(() => {
     fetchNotifications();
   }, []);
 
-  const handleMarkAsRead = async (notification: Notification) => {
-    try {
-      await notificationService.markAsRead(notification._id);
-      setNotifications(notifications.map(n => 
-        n._id === notification._id ? { ...n, isRead: true } : n
-      ));
-    } catch (error) {
-      console.error('Bildirim okundu olarak işaretlenemedi:', error);
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'appointment':
+        return 'calendar-clock';
+      case 'message':
+        return 'message-text';
+      default:
+        return 'bell';
     }
   };
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    await fetchNotifications();
-    setRefreshing(false);
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+  const renderNotification = ({ item }: { item: Notification }) => (
+    <TouchableOpacity
+      style={[styles.notificationItem, !item.isRead && styles.unreadNotification]}
+      onPress={() => handleNotificationPress(item)}
+    >
+      <MaterialCommunityIcons
+        name={getNotificationIcon(item.type)}
+        size={24}
+        color={item.isRead ? '#666' : '#4A90E2'}
+      />
+      <View style={styles.notificationContent}>
+        <Text style={[styles.notificationTitle, !item.isRead && styles.unreadTitle]}>
+          {item.title}
+        </Text>
+        <Text style={styles.notificationMessage}>{item.message}</Text>
+        <Text style={styles.notificationTime}>
+          {new Date(item.createdAt).toLocaleDateString()}
+        </Text>
       </View>
-    );
-  }
+    </TouchableOpacity>
+  );
+
+  const handleNotificationPress = async (notification: Notification) => {
+    if (!notification.isRead) {
+      try {
+        await api.patch(`/notifications/${notification._id}/read`);
+        setNotifications(notifications.map(n =>
+          n._id === notification._id ? { ...n, isRead: true } : n
+        ));
+      } catch (error) {
+        console.error('Bildirim okundu olarak işaretlenirken hata oluştu:', error);
+      }
+    }
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {notifications.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Title>Bildirim Bulunmuyor</Title>
-          <Paragraph>Henüz hiç bildiriminiz yok.</Paragraph>
-        </View>
-      ) : (
-        notifications.map((notification) => (
-          <Card
-            key={notification._id}
-            style={[
-              styles.card,
-              !notification.isRead && styles.unreadCard
-            ]}
-          >
-            <Card.Content>
-              <Title>{notification.title}</Title>
-              <Paragraph>{notification.message}</Paragraph>
-              <Paragraph style={styles.date}>{new Date(notification.date).toLocaleDateString()}</Paragraph>
-            </Card.Content>
-            {!notification.isRead && (
-              <Card.Actions>
-                <Button onPress={() => handleMarkAsRead(notification)}>
-                  Okundu Olarak İşaretle
-                </Button>
-              </Card.Actions>
-            )}
-          </Card>
-        ))
-      )}
-    </ScrollView>
+    <View style={styles.container}>
+      <FlatList
+        data={notifications}
+        renderItem={renderNotification}
+        keyExtractor={(item) => item._id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
-  loadingContainer: {
+  notificationItem: {
+    flexDirection: 'row',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  unreadNotification: {
+    backgroundColor: '#f8f9fa',
+  },
+  notificationContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginLeft: 16,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 50,
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  card: {
-    margin: 10,
-    elevation: 2,
+  unreadTitle: {
+    color: '#4A90E2',
   },
-  unreadCard: {
-    backgroundColor: '#e3f2fd',
-  },
-  date: {
-    fontSize: 12,
+  notificationMessage: {
+    fontSize: 14,
     color: '#666',
-    marginTop: 5,
+    marginTop: 4,
+  },
+  notificationTime: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
   },
 });
 

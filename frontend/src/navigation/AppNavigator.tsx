@@ -19,6 +19,10 @@ import OtherScreen from '../screens/OtherScreen';
 import SensoryGameScreen from '../screens/SensoryGameScreen';
 import SocialInteractionScreen from '../screens/SocialInteractionScreen';
 import DailyProgramScreen from '../screens/DailyProgramScreen';
+import AppointmentDetailScreen from '../screens/AppointmentDetailScreen';
+import MemoryGameScreen from '../screens/MemoryGameScreen';
+import MatchingGameScreen from '../screens/MatchingGameScreen';
+import PuzzleGameScreen from '../screens/PuzzleGameScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -99,6 +103,11 @@ const AppNavigator = () => {
             options={{ title: 'Randevu Oluştur' }}
           />
           <Stack.Screen
+            name="AppointmentDetail"
+            component={AppointmentDetailScreen}
+            options={{ title: 'Randevu Detayı' }}
+          />
+          <Stack.Screen
             name="SensoryGame"
             component={SensoryGameScreen}
             options={{ title: 'Duyusal Oyun' }}
@@ -112,6 +121,21 @@ const AppNavigator = () => {
             name="DailyProgram"
             component={DailyProgramScreen}
             options={{ title: 'Günlük Program' }}
+          />
+          <Stack.Screen
+            name="MemoryGame"
+            component={MemoryGameScreen}
+            options={{ title: 'Hafıza Oyunu' }}
+          />
+          <Stack.Screen
+            name="MatchingGame"
+            component={MatchingGameScreen}
+            options={{ title: 'Eşleştirme Oyunu' }}
+          />
+          <Stack.Screen
+            name="PuzzleGame"
+            component={PuzzleGameScreen}
+            options={{ title: 'Puzzle Oyunu' }}
           />
         </>
       )}

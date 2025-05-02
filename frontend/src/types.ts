@@ -6,8 +6,14 @@ export type RootStackParamList = {
   Appointments: undefined;
   CreateAppointment: undefined;
   Notifications: undefined;
-  Exercises: { activityId: string };
+  Exercises: undefined;
   DailyActivity: { programId: string };
+  Other: undefined;
+  Games: undefined;
+  Communication: undefined;
+  Progress: undefined;
+  Routine: undefined;
+  Settings: undefined;
 };
 
 export type MainTabParamList = {

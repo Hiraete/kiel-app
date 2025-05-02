@@ -7,8 +7,9 @@ export type RootStackParamList = {
   ExpertProfile: { expertId: string };
   CreateAppointment: { expertId: string };
   Appointments: undefined;
+  AppointmentDetail: { appointmentId: string };
   Exercises: { activityId: string };
-  DailyProgram: undefined;
+  DailyActivity: { programId: string };
   SensoryGame: undefined;
   SocialInteraction: undefined;
   MemoryGame: undefined;
@@ -26,6 +27,7 @@ export type RootStackParamList = {
   ProgressReport: undefined;
   Achievements: undefined;
   Statistics: undefined;
+  Chat: { expertId: string; expertName: string; expertImage?: string };
 };
 
 export type MainTabParamList = {

@@ -9,31 +9,46 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types';
 
-type OtherScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type OtherScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Other'>;
 
-export default function OtherScreen() {
+const OtherScreen = () => {
   const navigation = useNavigation<OtherScreenNavigationProp>();
 
-  const renderQuickAccessCard = (
-    title: string,
-    icon: keyof typeof MaterialCommunityIcons.glyphMap,
-    onPress: () => void
-  ) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-    >
-      <MaterialCommunityIcons
-        name={icon}
-        size={24}
-        color="#4A90E2"
-      />
-      <Text style={styles.cardTitle}>{title}</Text>
-    </TouchableOpacity>
-  );
+  const menuItems = [
+    {
+      title: 'Egzersizler',
+      icon: 'dumbbell',
+      screen: 'Exercises',
+    },
+    {
+      title: 'Oyunlar',
+      icon: 'gamepad',
+      screen: 'Games',
+    },
+    {
+      title: 'İletişim',
+      icon: 'message',
+      screen: 'Communication',
+    },
+    {
+      title: 'İlerleme',
+      icon: 'chart-line',
+      screen: 'Progress',
+    },
+    {
+      title: 'Rutinler',
+      icon: 'calendar-clock',
+      screen: 'Routine',
+    },
+    {
+      title: 'Ayarlar',
+      icon: 'cog',
+      screen: 'Settings',
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -43,111 +58,86 @@ export default function OtherScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Oyunlar</Text>
           <View style={styles.grid}>
-            {renderQuickAccessCard(
-              'Hafıza Oyunu',
-              'brain',
-              () => navigation.navigate('MemoryGame')
-            )}
-            {renderQuickAccessCard(
-              'Eşleştirme Oyunu',
-              'cards',
-              () => navigation.navigate('MatchingGame')
-            )}
-            {renderQuickAccessCard(
-              'Puzzle',
-              'puzzle',
-              () => navigation.navigate('PuzzleGame')
-            )}
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.card}
+                onPress={() => navigation.navigate(item.screen as never)}
+              >
+                <MaterialCommunityIcons name={item.icon as any} size={32} color="#4A90E2" />
+                <Text style={styles.cardTitle}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Egzersizler</Text>
           <View style={styles.grid}>
-            {renderQuickAccessCard(
-              'Fiziksel Egzersizler',
-              'run',
-              () => navigation.navigate('PhysicalExercises')
-            )}
-            {renderQuickAccessCard(
-              'Bilişsel Egzersizler',
-              'brain',
-              () => navigation.navigate('CognitiveExercises')
-            )}
-            {renderQuickAccessCard(
-              'Sosyal Egzersizler',
-              'account-group',
-              () => navigation.navigate('SocialExercises')
-            )}
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.card}
+                onPress={() => navigation.navigate(item.screen as never)}
+              >
+                <MaterialCommunityIcons name={item.icon as any} size={32} color="#4A90E2" />
+                <Text style={styles.cardTitle}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rutinler</Text>
           <View style={styles.grid}>
-            {renderQuickAccessCard(
-              'Günlük Rutinler',
-              'calendar-check',
-              () => navigation.navigate('DailyRoutines')
-            )}
-            {renderQuickAccessCard(
-              'Haftalık Rutinler',
-              'calendar-week',
-              () => navigation.navigate('WeeklyRoutines')
-            )}
-            {renderQuickAccessCard(
-              'Özel Rutinler',
-              'star',
-              () => navigation.navigate('CustomRoutines')
-            )}
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.card}
+                onPress={() => navigation.navigate(item.screen as never)}
+              >
+                <MaterialCommunityIcons name={item.icon as any} size={32} color="#4A90E2" />
+                <Text style={styles.cardTitle}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>İletişim</Text>
           <View style={styles.grid}>
-            {renderQuickAccessCard(
-              'İletişim Kartları',
-              'card-text',
-              () => navigation.navigate('CommunicationCards')
-            )}
-            {renderQuickAccessCard(
-              'Duygu Kartları',
-              'emoticon',
-              () => navigation.navigate('EmotionCards')
-            )}
-            {renderQuickAccessCard(
-              'Sosyal Hikayeler',
-              'book-open',
-              () => navigation.navigate('SocialStories')
-            )}
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.card}
+                onPress={() => navigation.navigate(item.screen as never)}
+              >
+                <MaterialCommunityIcons name={item.icon as any} size={32} color="#4A90E2" />
+                <Text style={styles.cardTitle}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>İlerleme</Text>
           <View style={styles.grid}>
-            {renderQuickAccessCard(
-              'İlerleme Raporu',
-              'chart-line',
-              () => navigation.navigate('ProgressReport')
-            )}
-            {renderQuickAccessCard(
-              'Başarılar',
-              'trophy',
-              () => navigation.navigate('Achievements')
-            )}
-            {renderQuickAccessCard(
-              'İstatistikler',
-              'chart-bar',
-              () => navigation.navigate('Statistics')
-            )}
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.card}
+                onPress={() => navigation.navigate(item.screen as never)}
+              >
+                <MaterialCommunityIcons name={item.icon as any} size={32} color="#4A90E2" />
+                <Text style={styles.cardTitle}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -177,14 +167,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 15,
-    width: '30%',
+    width: '48%',
     aspectRatio: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -195,10 +185,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardTitle: {
-    fontSize: 14,
+    marginTop: 8,
+    fontSize: 16,
     fontWeight: '600',
-    marginTop: 10,
-    color: '#333333',
+    color: '#333',
     textAlign: 'center',
   },
-}); 
+});
+
+export default OtherScreen; 

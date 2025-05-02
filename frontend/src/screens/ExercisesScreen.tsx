@@ -1,107 +1,95 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, Button, useTheme } from 'react-native-paper';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { RootStackParamList } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function ExercisesScreen() {
-  const theme = useTheme();
+type ExercisesScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Exercises'>;
+
+const ExercisesScreen = () => {
+  const navigation = useNavigation<ExercisesScreenNavigationProp>();
 
   const exercises = [
     {
-      id: 1,
-      title: 'Nefes Egzersizleri',
-      description: 'Doğru nefes alma teknikleri',
-      duration: '10 dakika',
-      level: 'Başlangıç',
+      title: 'Fiziksel Egzersizler',
+      icon: 'run',
+      description: 'Motor becerilerini geliştiren egzersizler',
     },
     {
-      id: 2,
-      title: 'Ses Egzersizleri',
-      description: 'Temel ses çalışmaları',
-      duration: '15 dakika',
-      level: 'Orta',
+      title: 'Bilişsel Egzersizler',
+      icon: 'brain',
+      description: 'Düşünme ve problem çözme becerilerini geliştiren egzersizler',
     },
     {
-      id: 3,
-      title: 'Artikülasyon',
-      description: 'Harf ve hece çalışmaları',
-      duration: '20 dakika',
-      level: 'İleri',
-    },
-    {
-      id: 4,
-      title: 'Ritim Çalışması',
-      description: 'Temel ritim egzersizleri',
-      duration: '15 dakika',
-      level: 'Başlangıç',
+      title: 'Sosyal Egzersizler',
+      icon: 'account-group',
+      description: 'Sosyal etkileşimi artıran egzersizler',
     },
   ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
-          Egzersizler
-        </Text>
-        <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
-          Size özel egzersiz programı
-        </Text>
-      </View>
-
-      <View style={styles.content}>
-        {exercises.map((exercise) => (
-          <Card
-            key={exercise.id}
-            style={[styles.card, { backgroundColor: theme.colors.surface }]}
-            mode="elevated"
+    <ScrollView style={styles.container}>
+      <View style={styles.grid}>
+        {exercises.map((exercise, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.card}
+            onPress={() => {
+              // İlgili egzersiz detay sayfasına yönlendirme
+              console.log(`${exercise.title} seçildi`);
+            }}
           >
-            <Card.Content>
-              <Text variant="titleLarge" style={{ color: theme.colors.onSurface }}>
-                {exercise.title}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}
-              >
-                {exercise.description}
-              </Text>
-              <View style={styles.details}>
-                <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
-                  {exercise.duration}
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                  {exercise.level}
-                </Text>
-              </View>
-            </Card.Content>
-            <Card.Actions>
-              <Button mode="contained" onPress={() => {}}>
-                Başla
-              </Button>
-            </Card.Actions>
-          </Card>
+            <MaterialCommunityIcons name={exercise.icon as any} size={32} color="#4A90E2" />
+            <Text style={styles.cardTitle}>{exercise.title}</Text>
+            <Text style={styles.cardDescription}>{exercise.description}</Text>
+          </TouchableOpacity>
         ))}
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
+    backgroundColor: '#f5f5f5',
     padding: 16,
   },
-  content: {
-    padding: 16,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   card: {
-    marginBottom: 16,
+    width: '100%',
+    backgroundColor: '#fff',
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  details: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  cardTitle: {
     marginTop: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
   },
-}); 
+  cardDescription: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+});
+
+export default ExercisesScreen; 

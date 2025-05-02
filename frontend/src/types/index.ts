@@ -89,6 +89,8 @@ export interface ProgramActivity {
 }
 
 // Randevu Tipleri
+export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'scheduled';
+
 export interface Appointment {
   _id: string;
   expert: {
@@ -102,20 +104,22 @@ export interface Appointment {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: AppointmentStatus;
   notes?: string;
   rating?: number;
   review?: string;
 }
 
 // Bildirim Tipleri
+export type NotificationType = 'appointment' | 'system' | 'message';
+
 export interface Notification {
   _id: string;
   title: string;
   message: string;
-  date: string;
+  type: NotificationType;
   isRead: boolean;
-  type: 'appointment' | 'system' | 'message';
+  createdAt: string;
   relatedId?: string;
 }
 
@@ -140,8 +144,21 @@ export type RootStackParamList = {
   Profile: undefined;
   Appointments: undefined;
   CreateAppointment: undefined;
+  AppointmentDetail: { appointmentId: string };
   Exercises: { activityId: string };
   DailyActivity: { programId: string };
+  Games: undefined;
+  MemoryGame: undefined;
+  MatchingGame: undefined;
+  PuzzleGame: undefined;
+  SensoryGame: undefined;
+  SocialInteraction: undefined;
+  Notifications: undefined;
+  Other: undefined;
+  Communication: undefined;
+  Progress: undefined;
+  Routine: undefined;
+  Settings: undefined;
 };
 
 // Form Tipleri
