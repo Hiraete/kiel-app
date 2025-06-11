@@ -1,16 +1,15 @@
-import express from 'express';
-import { register, login, getProfile, updateProfile, updateExpertProfile } from '../controllers/userController';
-import { authenticateToken } from '../middleware/authMiddleware';
+import express, { RequestHandler } from 'express';
+import { register, login, getProfile, updateProfile } from '../controllers/userController';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Public routes
-router.post('/register', register);
-router.post('/login', login);
+// Auth routes
+router.post('/register', register as RequestHandler);
+router.post('/login', login as RequestHandler);
 
-// Protected routes
-router.get('/profile', authenticateToken, getProfile);
-router.put('/profile', authenticateToken, updateProfile);
-router.put('/expert-profile', authenticateToken, updateExpertProfile);
+// Profile routes
+router.get('/profile', protect as RequestHandler, getProfile as RequestHandler);
+router.put('/profile', protect as RequestHandler, updateProfile as RequestHandler);
 
 export default router; 

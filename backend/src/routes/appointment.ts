@@ -1,11 +1,12 @@
-import express from 'express';
-import { auth, AuthRequest } from '../middleware/auth';
+import express, { Request, Response } from 'express';
+import { protect } from '../middleware/auth';
 import { Appointment } from '../models/Appointment';
+import { User } from '../models/User';
 
 const router = express.Router();
 
 // Randevuları getir
-router.get('/', auth, async (req: AuthRequest, res: any): Promise<void> => {
+router.get('/', protect, async (req: Request, res: Response): Promise<void> => {
   try {
     const appointments = await Appointment.find({
       $or: [
@@ -20,13 +21,19 @@ router.get('/', auth, async (req: AuthRequest, res: any): Promise<void> => {
 });
 
 // Randevu oluştur
-router.post('/', auth, async (req: AuthRequest, res: any): Promise<void> => {
+router.post('/', protect, async (req: Request, res: Response): Promise<void> => {
   try {
+    const user = await User.findById(req.user?.id);
+    if (!user) {
+      res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+      return;
+    }
+
     const appointment = new Appointment({
       expert: req.body.expert,
       client: {
-        id: req.user?.id,
-        name: req.user?.name
+        id: user._id,
+        name: user.profile.fullName
       },
       date: req.body.date,
       startTime: req.body.startTime,
@@ -43,7 +50,7 @@ router.post('/', auth, async (req: AuthRequest, res: any): Promise<void> => {
 });
 
 // Randevu durumunu güncelle
-router.patch('/:id/status', auth, async (req: AuthRequest, res: any): Promise<void> => {
+router.patch('/:id/status', protect, async (req: Request, res: Response): Promise<void> => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
@@ -65,7 +72,7 @@ router.patch('/:id/status', auth, async (req: AuthRequest, res: any): Promise<vo
 });
 
 // Randevuyu iptal et
-router.delete('/:id', auth, async (req: AuthRequest, res: any): Promise<void> => {
+router.delete('/:id', protect, async (req: Request, res: Response): Promise<void> => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {

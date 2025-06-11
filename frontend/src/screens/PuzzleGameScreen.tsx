@@ -1,160 +1,139 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
-const PuzzleGameScreen = () => {
-  const [puzzle, setPuzzle] = useState<number[]>([]);
-  const [emptyIndex, setEmptyIndex] = useState<number>(0);
-  const [moves, setMoves] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
+const GRID_SIZE = 3;
+const TOTAL_PIECES = GRID_SIZE * GRID_SIZE;
+
+function shuffle(array: any[]) {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
+
+export default function PuzzleGameScreen() {
+  const [pieces, setPieces] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
-    initializeGame();
+    resetGame();
   }, []);
 
-  const initializeGame = () => {
-    const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-    const shuffled = numbers.sort(() => Math.random() - 0.5);
-    setPuzzle(shuffled);
-    setEmptyIndex(shuffled.indexOf(0));
-    setMoves(0);
-    setIsComplete(false);
-  };
+  useEffect(() => {
+    if (pieces.length > 0 && pieces.every((val, idx) => val === idx)) {
+      Alert.alert('Tebrikler!', 'Puzzle tamamlandı!', [
+        { text: 'Yeniden Oyna', onPress: resetGame }
+      ]);
+    }
+  }, [pieces]);
 
-  const handleTilePress = (index: number) => {
-    if (isComplete) return;
-
-    const row = Math.floor(index / 3);
-    const col = index % 3;
-    const emptyRow = Math.floor(emptyIndex / 3);
-    const emptyCol = emptyIndex % 3;
-
-    if (
-      (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
-      (Math.abs(col - emptyCol) === 1 && row === emptyRow)
-    ) {
-      const newPuzzle = [...puzzle];
-      newPuzzle[emptyIndex] = newPuzzle[index];
-      newPuzzle[index] = 0;
-      setPuzzle(newPuzzle);
-      setEmptyIndex(index);
-      setMoves(moves + 1);
-
-      if (isPuzzleComplete(newPuzzle)) {
-        setIsComplete(true);
-        Alert.alert('Tebrikler!', `Puzzle'ı ${moves + 1} hamlede tamamladınız!`);
-      }
+  const handlePiecePress = (idx: number) => {
+    if (selected === null) {
+      setSelected(idx);
+    } else if (selected === idx) {
+      setSelected(null);
+    } else {
+      // Swap
+      const newPieces = [...pieces];
+      [newPieces[selected], newPieces[idx]] = [newPieces[idx], newPieces[selected]];
+      setPieces(newPieces);
+      setSelected(null);
     }
   };
 
-  const isPuzzleComplete = (currentPuzzle: number[]) => {
-    for (let i = 0; i < currentPuzzle.length - 1; i++) {
-      if (currentPuzzle[i] !== i + 1) return false;
-    }
-    return currentPuzzle[currentPuzzle.length - 1] === 0;
+  const resetGame = () => {
+    const arr = Array.from({ length: TOTAL_PIECES }, (_, i) => i);
+    setPieces(shuffle(arr));
+    setSelected(null);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Puzzle Oyunu</Text>
-        <Text style={styles.moves}>Hamle: {moves}</Text>
-      </View>
-
+      <Text style={styles.title}>Puzzle Oyunu</Text>
       <View style={styles.grid}>
-        {puzzle.map((number, index) => (
+        {pieces.map((piece, idx) => (
           <TouchableOpacity
-            key={index}
-            style={[
-              styles.tile,
-              number === 0 && styles.emptyTile,
-              isComplete && styles.completeTile,
-            ]}
-            onPress={() => handleTilePress(index)}
+            key={idx}
+            style={[styles.piece, selected === idx && styles.selectedPiece]}
+            onPress={() => handlePiecePress(idx)}
+            activeOpacity={0.7}
           >
-            {number !== 0 && (
-              <Text style={styles.tileText}>{number}</Text>
-            )}
+            {/* Burada gerçek bir resim yerine renkli kutular ve parça numarası gösteriyoruz */}
+            <View style={[styles.imagePart, { backgroundColor: COLORS[piece % COLORS.length] }]}/>
+            <Text style={styles.pieceText}>{piece + 1}</Text>
           </TouchableOpacity>
         ))}
       </View>
-
-      <TouchableOpacity style={styles.resetButton} onPress={initializeGame}>
-        <Text style={styles.resetButtonText}>Yeniden Başla</Text>
+      <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
+        <Text style={styles.resetText}>Yeniden Başlat</Text>
       </TouchableOpacity>
     </View>
   );
-};
+}
+
+const COLORS = ['#FFB74D', '#4FC3F7', '#81C784', '#E57373', '#BA68C8', '#FFD54F', '#A1887F', '#90A4AE', '#F06292'];
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#f5f5f5',
     padding: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    marginBottom: 24,
     color: '#333',
-  },
-  moves: {
-    fontSize: 18,
-    color: '#666',
   },
   grid: {
+    width: 240,
+    height: 240,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    aspectRatio: 1,
-  },
-  tile: {
-    width: '30%',
-    aspectRatio: 1,
-    backgroundColor: '#fff',
+    marginBottom: 24,
     borderRadius: 12,
-    marginBottom: 16,
+    overflow: 'hidden',
+    backgroundColor: '#eee',
+  },
+  piece: {
+    width: 80,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: '#fafafa',
   },
-  emptyTile: {
-    backgroundColor: 'transparent',
-    shadowOpacity: 0,
-    elevation: 0,
+  selectedPiece: {
+    borderColor: '#4A90E2',
+    borderWidth: 3,
   },
-  completeTile: {
-    backgroundColor: '#E3FFF1',
+  imagePart: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginBottom: 4,
   },
-  tileText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  pieceText: {
+    fontSize: 18,
     color: '#333',
+    fontWeight: 'bold',
   },
   resetButton: {
+    marginTop: 16,
     backgroundColor: '#4A90E2',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
-  resetButtonText: {
+  resetText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
-});
-
-export default PuzzleGameScreen; 
+}); 

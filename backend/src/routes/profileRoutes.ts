@@ -1,5 +1,5 @@
 import express, { RequestHandler } from 'express';
-import { auth } from '../middleware/auth';
+import { protect } from '../middleware/auth';
 import {
   getProfile,
   updateProfile,
@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 // Tüm rotalar için auth middleware'ini kullan
-router.use(auth as RequestHandler);
+router.use(protect as RequestHandler);
 
 // Profil rotaları
 router.get('/', getProfile as RequestHandler);

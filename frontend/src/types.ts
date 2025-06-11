@@ -1,26 +1,57 @@
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+
 export type RootStackParamList = {
+  MainTabs: undefined;
+  Home: undefined;
   Login: undefined;
   Register: undefined;
-  Home: undefined;
   Profile: undefined;
-  Appointments: undefined;
+  ExpertProfile: undefined;
   CreateAppointment: undefined;
-  Notifications: undefined;
+  AppointmentDetail: { id: string };
+  VideoCall: { id: string };
+  Settings: undefined;
   Exercises: undefined;
-  DailyActivity: { programId: string };
-  Other: undefined;
+  ExerciseDetail: { exerciseId: string };
+  Consultations: undefined;
+  Consultation: { id: string };
+  Forums: undefined;
+  Forum: { id: string };
+  Reports: undefined;
+  Report: { id: string };
+  Notifications: undefined;
+  Appointments: undefined;
+  Messages: undefined;
+  VideoChat: undefined;
+  DailyActivity: undefined;
+  DailyProgram: undefined;
+  Activities: undefined;
   Games: undefined;
-  Communication: undefined;
+  PuzzleGame: undefined;
+  MatchingGame: undefined;
+  MemoryGame: undefined;
+  SensoryGame: undefined;
+  SocialInteraction: undefined;
   Progress: undefined;
   Routine: undefined;
-  Settings: undefined;
+  Communication: undefined;
+  Chat: { id: string };
+  Other: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
+  DailyActivity: undefined;
+  Exercises: undefined;
+  Games: undefined;
+  Reports: undefined;
+  Profile: undefined;
+  Forums: undefined;
+  Consultations: undefined;
   Appointments: undefined;
   Notifications: undefined;
-  Profile: undefined;
+  Other: undefined;
 };
 
 export interface Activity {
@@ -48,4 +79,50 @@ export interface Program {
   }[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+export type RootStackScreenProps<T extends keyof RootStackParamList> = {
+  navigation: RootStackNavigationProp;
+  route: RouteProp<RootStackParamList, T>;
+};
+
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'uzman' | 'danisan';
+  profile: {
+    phone?: string;
+    address?: string;
+    bio?: string;
+    expertProfile?: {
+      title: string;
+      specialization: string[];
+      experience: number;
+      rating: number;
+      totalReviews: number;
+      availability: {
+        monday: boolean;
+        tuesday: boolean;
+        wednesday: boolean;
+        thursday: boolean;
+        friday: boolean;
+        saturday: boolean;
+        sunday: boolean;
+      };
+    };
+    childProfiles?: {
+      name: string;
+      age: number;
+      gender: 'male' | 'female' | 'other';
+      specialNeeds?: string;
+    }[];
+    preferences?: {
+      language: string;
+      notifications: boolean;
+      darkMode: boolean;
+    };
+  };
 } 

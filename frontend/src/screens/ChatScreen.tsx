@@ -63,7 +63,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
           receiverId: expertId,
         };
 
-        const response = await api.post('/messages', message);
+        const response = await api.post('/send', message);
         setMessages([...messages, response.data]);
         setNewMessage('');
       } catch (error) {
@@ -74,6 +74,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isUserMessage = item.senderId === user?._id;
+    const otherUser = isUserMessage ? item.receiverId : item.senderId;
+    const isCurrentUser = item.senderId === user?._id;
     return (
       <View
         style={[
@@ -105,7 +107,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     >
       <View style={styles.header}>
         <Image
-          source={expertImage ? { uri: expertImage } : require('../assets/default-avatar.png')}
+          source={expertImage ? { uri: expertImage } : require('../../assets/default-avatar.png')}
           style={styles.headerAvatar}
         />
         <Text style={styles.headerName}>{expertName}</Text>

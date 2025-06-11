@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { User } from '../models/User';
-import bcrypt from 'bcryptjs';
+
 import jwt from 'jsonwebtoken';
 const { body, validationResult } = require('express-validator');
 
@@ -11,11 +11,6 @@ interface RegisterRequest {
   password: string;
   name: string;
   role?: 'uzman' | 'danisan';
-}
-
-interface LoginRequest {
-  email: string;
-  password: string;
 }
 
 // Register route
@@ -32,16 +27,24 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
+        console.log('Validasyon hatası:', errors.array());
+        res.status(400).json({ 
+          success: false,
+          message: 'Validasyon hatası',
+          errors: errors.array() 
+        });
         return;
       }
 
-      const { email, password, name, role } = req.body;
+      const { email, password, name } = req.body;
 
       // Check if user already exists
       let user = await User.findOne({ email });
       if (user) {
-        res.status(400).json({ message: 'Bu email adresi zaten kullanımda' });
+        res.status(400).json({ 
+          success: false,
+          message: 'Bu email adresi zaten kullanımda' 
+        });
         return;
       }
 
@@ -50,8 +53,9 @@ router.post(
         email,
         password,
         name,
-        role: role || 'danisan',
+        role: 'danisan',
         profile: {
+          fullName: name,
           preferences: {
             notifications: true,
             language: 'tr',
@@ -59,10 +63,6 @@ router.post(
           },
         },
       });
-
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
 
       await user.save();
 
@@ -77,15 +77,35 @@ router.post(
       jwt.sign(
         payload,
         process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '1h' },
+        { expiresIn: '7d' },
         (err, token) => {
-          if (err) throw err;
-          res.json({ token });
+          if (err) {
+            console.error('Token oluşturma hatası:', err);
+            res.status(500).json({ 
+              success: false,
+              message: 'Token oluşturulurken bir hata oluştu' 
+            });
+            return;
+          }
+          res.status(201).json({ 
+            success: true,
+            message: 'Kayıt başarılı',
+            token,
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role
+            }
+          });
         }
       );
     } catch (error: any) {
-      console.error(error.message);
-      res.status(500).send('Sunucu hatası');
+      console.error('Kayıt hatası:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Sunucu hatası',
+        error: error.message 
+      });
     }
   }
 );
@@ -97,31 +117,48 @@ router.post(
     body('email').isEmail().withMessage('Geçerli bir email adresi giriniz'),
     body('password').exists().withMessage('Şifre alanı zorunludur'),
   ],
-  async (req: Request<{}, {}, LoginRequest>, res: Response): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
+        console.log('Validasyon hatası:', errors.array());
+        res.status(400).json({ 
+          success: false,
+          message: 'Validasyon hatası',
+          errors: errors.array() 
+        });
         return;
       }
 
       const { email, password } = req.body;
+      console.log('Login isteği alındı:', { email });
 
-      // Check if user exists
+      // Kullanıcıyı bul
       let user = await User.findOne({ email });
       if (!user) {
-        res.status(400).json({ message: 'Geçersiz kullanıcı bilgileri' });
+        console.log('Kullanıcı bulunamadı:', email);
+        res.status(400).json({ 
+          success: false,
+          message: 'Bu email adresi ile kayıtlı kullanıcı bulunamadı' 
+        });
         return;
       }
 
-      // Check password
+      // Şifre kontrolü
+      console.log('Şifre kontrolü yapılıyor...');
       const isMatch = await user.comparePassword(password);
+      console.log('Şifre kontrolü sonucu:', isMatch);
+
       if (!isMatch) {
-        res.status(400).json({ message: 'Geçersiz kullanıcı bilgileri' });
+        console.log('Şifre uyuşmazlığı:', email);
+        res.status(400).json({ 
+          success: false,
+          message: 'Şifre hatalı' 
+        });
         return;
       }
 
-      // Create JWT token
+      // JWT token oluştur
       const payload = {
         user: {
           id: user.id,
@@ -132,17 +169,41 @@ router.post(
       jwt.sign(
         payload,
         process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '1h' },
+        { expiresIn: '7d' },
         (err, token) => {
-          if (err) throw err;
-          res.json({ token });
+          if (err) {
+            console.error('Token oluşturma hatası:', err);
+            res.status(500).json({ 
+              success: false,
+              message: 'Token oluşturulurken bir hata oluştu' 
+            });
+            return;
+          }
+          
+          console.log('Login başarılı:', { email, role: user.role });
+          res.json({
+            success: true,
+            message: 'Giriş başarılı',
+            token,
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+              profile: user.profile,
+              childProfiles: user.childProfiles,
+            }
+          });
         }
       );
     } catch (error: any) {
-      console.error(error.message);
-      res.status(500).send('Sunucu hatası');
+      console.error('Login işlemi hatası:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Sunucu hatası',
+        error: error.message 
+      });
     }
   }
 );
 
-export default router;
+export default router; 

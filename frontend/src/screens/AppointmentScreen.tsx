@@ -82,6 +82,22 @@ const AppointmentScreen = () => {
     loadAppointments();
   }, [loadAppointments]);
 
+  useEffect(() => {
+    if (appointments.length === 0) {
+      setAppointments([
+        {
+          _id: '1',
+          expert: { _id: 'e1', name: 'Dr. Uzman' },
+          client: { _id: 'c1', name: 'Danışan' },
+          date: new Date().toISOString(),
+          startTime: '10:00',
+          endTime: '10:30',
+          status: 'scheduled',
+        } as any
+      ]);
+    }
+  }, [appointments]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setPage(1);
@@ -197,35 +213,20 @@ const AppointmentScreen = () => {
   };
 
   const renderAppointment = ({ item }: { item: Appointment }) => {
-    const isExpert = user?.role === 'uzman';
-    const otherUser = isExpert ? item.client : item.expert;
     const formattedDate = format(new Date(item.date), 'dd MMMM yyyy', { locale: tr });
-    
     return (
       <View style={styles.appointmentCard}>
-        <Text style={styles.userName}>
-          {isExpert ? 'Danışan' : 'Uzman'}: {otherUser.name}
-        </Text>
-        <Text style={styles.dateTime}>
-          {formattedDate} - {item.startTime} - {item.endTime}
-        </Text>
-        <Text style={styles.status}>
-          Durum: {getStatusText(item.status)}
-        </Text>
+        <Text style={styles.userName}>Uzman: {item.expert.name}</Text>
+        <Text style={styles.dateTime}>{formattedDate} - {item.startTime} - {item.endTime}</Text>
+        <Text style={styles.status}>Durum: {getStatusText(item.status)}</Text>
         {item.notes && <Text style={styles.notes}>Notlar: {item.notes}</Text>}
         {item.status === 'completed' && !item.rating && (
-          <TouchableOpacity
-            style={styles.rateButton}
-            onPress={() => handleRate(item._id, 5, '')}
-          >
+          <TouchableOpacity style={styles.rateButton} onPress={() => handleRate(item._id, 5, '')}>
             <Text style={styles.rateButtonText}>Değerlendir</Text>
           </TouchableOpacity>
         )}
         {item.status === 'pending' && (
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => handleCancel(item._id)}
-          >
+          <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancel(item._id)}>
             <Text style={styles.cancelButtonText}>İptal Et</Text>
           </TouchableOpacity>
         )}

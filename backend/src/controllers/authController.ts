@@ -4,7 +4,7 @@ import { User } from '../models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export const register = async (req: Request, res: Response, next: NextFunction) => {
+export const register = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
   try {
     const { email, password, role } = req.body;
 
@@ -58,19 +58,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
     // Kullanıcıyı bul
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Geçersiz email veya şifre' });
-    }
-
-    // Rol kontrolü
-    if (user.role !== role) {
-      return res.status(401).json({ message: 'Bu hesap türü için giriş yapamazsınız' });
     }
 
     // Şifre kontrolü
@@ -100,7 +95,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-export const getMe = async (req: Request, res: Response, next: NextFunction) => {
+export const getMe = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
   try {
     const userId = req.user?.id;
     const user = await User.findById(userId).select('-password');

@@ -25,4 +25,25 @@ export interface RegisterForm {
 export interface AuthResponse {
   user: User;
   token: string;
+}
+
+export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'scheduled';
+
+export interface Appointment {
+  _id: string;
+  expert: {
+    _id: string;
+    name: string;
+  };
+  client: {
+    _id: string;
+    name: string;
+  };
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  notes?: string;
+  rating?: number;
+  review?: string;
 } 

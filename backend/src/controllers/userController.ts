@@ -1,76 +1,59 @@
-import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
+import { Request, Response } from 'express';
+import { User } from '../models/User';
 import jwt from 'jsonwebtoken';
-import { User, IUser } from '../models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: 'uzman' | 'danisan';
-  };
-}
-
-// JWT token oluşturma
-const generateToken = (user: IUser): string => {
-  return jwt.sign(
-    { userId: user._id, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '1d' }
-  );
-};
 
 // Kullanıcı kaydı
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role } = req.body;
+    const { email, password, role } = req.body;
 
-    // Email kontrolü
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       res.status(400).json({ message: 'Bu email adresi zaten kullanımda' });
       return;
     }
 
-    // Yeni kullanıcı oluştur
     const user = new User({
-      name,
       email,
       password,
-      role: role || 'danisan',
+      role,
       profile: {
+        fullName: '',
+        dateOfBirth: '',
+        gender: 'erkek',
+        autismLevel: 'hafif',
+        phoneNumber: '',
+        address: '',
         preferences: {
           notifications: true,
           language: 'tr',
           theme: 'light',
         },
       },
+      childProfiles: [],
     });
 
     await user.save();
 
-    // JWT token oluştur
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '1h' }
-    );
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+      expiresIn: '7d',
+    });
 
     res.status(201).json({
       message: 'Kullanıcı başarıyla oluşturuldu',
+      token,
       user: {
         id: user._id,
-        name: user.name,
         email: user.email,
         role: user.role,
         profile: user.profile,
+        childProfiles: user.childProfiles,
       },
-      token,
     });
   } catch (error) {
-    console.error('Kayıt hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    res.status(500).json({ message: 'Sunucu hatası', error: (error as Error).message });
   }
 };
 
@@ -79,49 +62,47 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    // Kullanıcıyı bul
     const user = await User.findOne({ email });
     if (!user) {
       res.status(401).json({ message: 'Geçersiz email veya şifre' });
       return;
     }
 
-    // Şifreyi kontrol et
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       res.status(401).json({ message: 'Geçersiz email veya şifre' });
       return;
     }
 
-    // JWT token oluştur
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '1h' }
-    );
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+      expiresIn: '7d',
+    });
 
     res.json({
       message: 'Giriş başarılı',
+      token,
       user: {
         id: user._id,
-        name: user.name,
         email: user.email,
         role: user.role,
         profile: user.profile,
+        childProfiles: user.childProfiles,
       },
-      token,
     });
   } catch (error) {
-    console.error('Giriş hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    res.status(500).json({ message: 'Sunucu hatası', error: (error as Error).message });
   }
 };
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      return;
+    }
+
     const user = await User.findById(userId).select('-password');
-    
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
@@ -129,15 +110,20 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
+    res.status(500).json({ message: 'Sunucu hatası', error: (error as Error).message });
   }
 };
 
 // Profil güncelleme
-export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { name, email, profile } = req.body;
+    if (!userId) {
+      res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      return;
+    }
+
+    const { fullName, dateOfBirth, gender, autismLevel, phoneNumber, address, preferences } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -145,18 +131,19 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // Email değişikliği kontrolü
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        res.status(400).json({ message: 'Bu email adresi zaten kullanımda' });
-        return;
-      }
-      user.email = email;
-    }
-
-    if (name) user.name = name;
-    if (profile) user.profile = profile;
+    user.profile = {
+      ...user.profile,
+      fullName: fullName || user.profile.fullName,
+      dateOfBirth: dateOfBirth || user.profile.dateOfBirth,
+      gender: gender || user.profile.gender,
+      autismLevel: autismLevel || user.profile.autismLevel,
+      phoneNumber: phoneNumber || user.profile.phoneNumber,
+      address: address || user.profile.address,
+      preferences: {
+        ...user.profile.preferences,
+        ...preferences,
+      },
+    };
 
     await user.save();
 
@@ -164,24 +151,27 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       message: 'Profil başarıyla güncellendi',
       user: {
         id: user._id,
-        name: user.name,
         email: user.email,
         role: user.role,
         profile: user.profile,
+        childProfiles: user.childProfiles,
       },
     });
   } catch (error) {
-    console.error('Profil güncelleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    res.status(500).json({ message: 'Sunucu hatası', error: (error as Error).message });
   }
 };
 
 // Uzman profil güncelleme
-export const updateExpertProfile = async (req: Request, res: Response) => {
+export const updateExpertProfile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user.userId;
-    const user = await User.findById(userId);
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      return;
+    }
 
+    const user = await User.findById(userId);
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
@@ -205,7 +195,6 @@ export const updateExpertProfile = async (req: Request, res: Response) => {
       expertProfile: user.profile.expertProfile
     });
   } catch (error) {
-    console.error('Uzman profil güncelleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    res.status(500).json({ message: 'Sunucu hatası', error: (error as Error).message });
   }
 }; 

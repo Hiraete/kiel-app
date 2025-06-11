@@ -8,14 +8,15 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Platform,
+  FlatList,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useAuth } from '../contexts/AuthContext';
-import { appointmentService } from '../services/appointmentService';
-import { userService } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { appointmentService } from '../services/appointmentService';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Expert {
   _id: string;
@@ -31,6 +32,12 @@ interface Expert {
   };
 }
 
+const AVAILABLE_HOURS = [
+  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+  '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+  '16:00', '16:30', '17:00', '17:30'
+];
+
 export const CreateAppointmentScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
@@ -42,6 +49,7 @@ export const CreateAppointmentScreen = () => {
   const [notes, setNotes] = useState('');
   const [experts, setExperts] = useState<Expert[]>([]);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     fetchExperts();
@@ -50,9 +58,9 @@ export const CreateAppointmentScreen = () => {
   const fetchExperts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/api/experts');
-      const data = await response.json();
-      setExperts(data.experts);
+      const response = await appointmentService.getExperts();
+      console.log('Uzmanlar:', response);
+      setExperts(response);
     } catch (error) {
       console.error('Uzmanlar yüklenirken hata:', error);
       Alert.alert('Hata', 'Uzmanlar yüklenirken bir hata oluştu');
@@ -62,42 +70,66 @@ export const CreateAppointmentScreen = () => {
   };
 
   const handleDateChange = (event: any, date?: Date) => {
-    setShowDatePicker(false);
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
     if (date) {
       setSelectedDate(date);
+    }
+    if (Platform.OS === 'web' && event?.target?.value) {
+      setSelectedDate(new Date(event.target.value));
+    }
+  };
+
+  const handleTimeSelect = (time: string) => {
+    if (!startTime) {
+      setStartTime(time);
+    } else {
+      const startIndex = AVAILABLE_HOURS.indexOf(startTime);
+      const endIndex = AVAILABLE_HOURS.indexOf(time);
+      
+      if (endIndex <= startIndex) {
+        Alert.alert('Hata', 'Bitiş saati başlangıç saatinden sonra olmalıdır');
+        return;
+      }
+      
+      setEndTime(time);
+      setShowTimePicker(false);
     }
   };
 
   const handleCreateAppointment = async () => {
+    if (!user) {
+      Alert.alert('Hata', 'Kullanıcı bilgisi bulunamadı');
+      return;
+    }
     if (!selectedExpert) {
       Alert.alert('Hata', 'Lütfen bir uzman seçin');
       return;
     }
-
     if (!startTime || !endTime) {
       Alert.alert('Hata', 'Lütfen başlangıç ve bitiş saatlerini seçin');
       return;
     }
-
     try {
       setLoading(true);
-      await appointmentService.createAppointment({
+      const response = await appointmentService.createAppointment({
         expertId: selectedExpert._id,
         date: selectedDate.toISOString(),
         startTime,
         endTime,
         notes,
       });
-
+      console.log('Randevu oluşturuldu:', response);
       Alert.alert('Başarılı', 'Randevu başarıyla oluşturuldu', [
         {
           text: 'Tamam',
           onPress: () => navigation.goBack(),
         },
       ]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Randevu oluşturulurken hata:', error);
-      Alert.alert('Hata', 'Randevu oluşturulurken bir hata oluştu');
+      Alert.alert('Hata', error?.response?.data?.message || 'Randevu oluşturulurken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -115,41 +147,59 @@ export const CreateAppointmentScreen = () => {
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Uzman Seçimi</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {experts.map((expert) => (
+        {experts.length === 0 && (
+          <Text style={{ color: 'red', marginBottom: 10 }}>Hiç uzman bulunamadı.</Text>
+        )}
+        <FlatList
+          horizontal
+          data={experts}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
             <TouchableOpacity
-              key={expert._id}
               style={[
                 styles.expertCard,
-                selectedExpert?._id === expert._id && styles.selectedExpertCard,
+                selectedExpert?._id === item._id && styles.selectedExpertCard,
               ]}
-              onPress={() => setSelectedExpert(expert)}
+              onPress={() => setSelectedExpert(item)}
             >
-              <Text style={styles.expertName}>{expert.name}</Text>
+              <Text style={styles.expertName}>{item.name || '-'}</Text>
               <Text style={styles.expertSpecialization}>
-                {expert.profile.expertProfile.specialization}
+                {Array.isArray(item.profile?.expertProfile?.specialization)
+                  ? item.profile.expertProfile.specialization.join(', ')
+                  : item.profile?.expertProfile?.specialization || '-'}
               </Text>
-              {expert.profile.expertProfile.rating && (
+              {item.profile?.expertProfile?.rating && (
                 <Text style={styles.expertRating}>
-                  ⭐ {expert.profile.expertProfile.rating.toFixed(1)} ({expert.profile.expertProfile.totalReviews} değerlendirme)
+                  ⭐ {item.profile.expertProfile.rating.toFixed(1)} ({item.profile.expertProfile.totalReviews} değerlendirme)
                 </Text>
               )}
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          )}
+          showsHorizontalScrollIndicator={false}
+        />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tarih Seçimi</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.dateButtonText}>
-            {format(selectedDate, 'dd MMMM yyyy', { locale: tr })}
-          </Text>
-        </TouchableOpacity>
-        {showDatePicker && (
+        {Platform.OS === 'web' ? (
+          <input
+            type="date"
+            value={format(selectedDate, 'yyyy-MM-dd')}
+            min={format(new Date(), 'yyyy-MM-dd')}
+            onChange={handleDateChange}
+            style={{ padding: 10, borderRadius: 10, borderColor: '#ccc', marginBottom: 10 }}
+          />
+        ) : (
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateButtonText}>
+              {format(selectedDate, 'd MMMM yyyy', { locale: tr })}
+            </Text>
+          </TouchableOpacity>
+        )}
+        {showDatePicker && Platform.OS !== 'web' && (
           <DateTimePicker
             value={selectedDate}
             mode="date"
@@ -162,20 +212,37 @@ export const CreateAppointmentScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Saat Seçimi</Text>
-        <View style={styles.timeInputContainer}>
-          <TextInput
-            style={styles.timeInput}
-            placeholder="Başlangıç (örn: 09:00)"
-            value={startTime}
-            onChangeText={setStartTime}
-          />
-          <TextInput
-            style={styles.timeInput}
-            placeholder="Bitiş (örn: 10:00)"
-            value={endTime}
-            onChangeText={setEndTime}
-          />
+        <View style={styles.timeSelectionContainer}>
+          <TouchableOpacity
+            style={styles.timeButton}
+            onPress={() => setShowTimePicker(true)}
+          >
+            <Text style={styles.timeButtonText}>
+              {startTime ? `${startTime} - ${endTime || 'Seçiniz'}` : 'Saat Seçin'}
+            </Text>
+          </TouchableOpacity>
         </View>
+        {showTimePicker && (
+          <View style={styles.timePickerContainer}>
+            {AVAILABLE_HOURS.map((time) => (
+              <TouchableOpacity
+                key={time}
+                style={[
+                  styles.timeSlot,
+                  (time === startTime || time === endTime) && styles.selectedTimeSlot,
+                ]}
+                onPress={() => handleTimeSelect(time)}
+              >
+                <Text style={[
+                  styles.timeSlotText,
+                  (time === startTime || time === endTime) && styles.selectedTimeSlotText,
+                ]}>
+                  {time}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -193,8 +260,13 @@ export const CreateAppointmentScreen = () => {
       <TouchableOpacity
         style={styles.createButton}
         onPress={handleCreateAppointment}
+        disabled={loading}
       >
-        <Text style={styles.createButtonText}>Randevu Oluştur</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.createButtonText}>Randevu Oluştur</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -261,15 +333,42 @@ const styles = StyleSheet.create({
   dateButtonText: {
     fontSize: 16,
   },
-  timeInputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  timeSelectionContainer: {
+    marginBottom: 10,
   },
-  timeInput: {
+  timeButton: {
     backgroundColor: 'white',
     padding: 15,
     borderRadius: 10,
-    width: '48%',
+    alignItems: 'center',
+  },
+  timeButtonText: {
+    fontSize: 16,
+  },
+  timePickerContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 10,
+  },
+  timeSlot: {
+    width: '23%',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+  },
+  selectedTimeSlot: {
+    backgroundColor: '#0066cc',
+  },
+  timeSlotText: {
+    color: '#333',
+  },
+  selectedTimeSlotText: {
+    color: 'white',
   },
   notesInput: {
     backgroundColor: 'white',

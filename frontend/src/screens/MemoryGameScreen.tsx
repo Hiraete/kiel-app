@@ -1,153 +1,149 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
-const MemoryGameScreen = () => {
-  const [cards, setCards] = useState<number[]>([]);
-  const [flippedCards, setFlippedCards] = useState<number[]>([]);
-  const [matchedCards, setMatchedCards] = useState<number[]>([]);
-  const [moves, setMoves] = useState(0);
+const CARD_PAIRS = ['🍎', '🍌', '🍇', '🍓'];
+
+function shuffle(array: any[]) {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
+
+export default function MemoryGameScreen() {
+  const [cards, setCards] = useState<{ value: string; id: number; matched: boolean }[]>([]);
+  const [flipped, setFlipped] = useState<number[]>([]);
+  const [matched, setMatched] = useState<number[]>([]);
+  const [lock, setLock] = useState(false);
 
   useEffect(() => {
-    initializeGame();
+    // Kartları başlat
+    const initialCards = shuffle(
+      [...CARD_PAIRS, ...CARD_PAIRS].map((value, i) => ({ value, id: i, matched: false }))
+    );
+    setCards(initialCards);
+    setFlipped([]);
+    setMatched([]);
+    setLock(false);
   }, []);
 
-  const initializeGame = () => {
-    const numbers = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6];
-    const shuffled = numbers.sort(() => Math.random() - 0.5);
-    setCards(shuffled);
-    setFlippedCards([]);
-    setMatchedCards([]);
-    setMoves(0);
-  };
+  useEffect(() => {
+    if (flipped.length === 2) {
+      setLock(true);
+      setTimeout(() => {
+        const [first, second] = flipped;
+        if (cards[first].value === cards[second].value) {
+          setMatched((prev) => [...prev, first, second]);
+        }
+        setFlipped([]);
+        setLock(false);
+      }, 800);
+    }
+  }, [flipped]);
+
+  useEffect(() => {
+    if (matched.length === cards.length && cards.length > 0) {
+      Alert.alert('Tebrikler!', 'Tüm kartları eşleştirdiniz!', [
+        { text: 'Yeniden Oyna', onPress: resetGame }
+      ]);
+    }
+  }, [matched, cards]);
 
   const handleCardPress = (index: number) => {
-    if (flippedCards.length === 2 || flippedCards.includes(index) || matchedCards.includes(index)) {
-      return;
-    }
+    if (lock || flipped.includes(index) || matched.includes(index)) return;
+    setFlipped((prev) => [...prev, index]);
+  };
 
-    const newFlippedCards = [...flippedCards, index];
-    setFlippedCards(newFlippedCards);
-
-    if (newFlippedCards.length === 2) {
-      setMoves(moves + 1);
-      const [firstIndex, secondIndex] = newFlippedCards;
-      
-      if (cards[firstIndex] === cards[secondIndex]) {
-        setMatchedCards([...matchedCards, firstIndex, secondIndex]);
-        setFlippedCards([]);
-        
-        if (matchedCards.length + 2 === cards.length) {
-          Alert.alert('Tebrikler!', `Oyunu ${moves + 1} hamlede tamamladınız!`);
-        }
-      } else {
-        setTimeout(() => {
-          setFlippedCards([]);
-        }, 1000);
-      }
-    }
+  const resetGame = () => {
+    const newCards = shuffle(
+      [...CARD_PAIRS, ...CARD_PAIRS].map((value, i) => ({ value, id: i, matched: false }))
+    );
+    setCards(newCards);
+    setFlipped([]);
+    setMatched([]);
+    setLock(false);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Hafıza Oyunu</Text>
-        <Text style={styles.moves}>Hamle: {moves}</Text>
-      </View>
-
+      <Text style={styles.title}>Hafıza Oyunu</Text>
       <View style={styles.grid}>
-        {cards.map((card, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.card,
-              flippedCards.includes(index) && styles.flippedCard,
-              matchedCards.includes(index) && styles.matchedCard,
-            ]}
-            onPress={() => handleCardPress(index)}
-          >
-            {flippedCards.includes(index) || matchedCards.includes(index) ? (
-              <Text style={styles.cardText}>{card}</Text>
-            ) : (
-              <MaterialCommunityIcons name="cards" size={32} color="#4A90E2" />
-            )}
-          </TouchableOpacity>
-        ))}
+        {cards.map((card, idx) => {
+          const isOpen = flipped.includes(idx) || matched.includes(idx);
+          return (
+            <TouchableOpacity
+              key={card.id}
+              style={[styles.card, isOpen && styles.cardOpen]}
+              onPress={() => handleCardPress(idx)}
+              activeOpacity={isOpen ? 1 : 0.7}
+            >
+              <Text style={styles.cardText}>{isOpen ? card.value : '?'}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
-
-      <TouchableOpacity style={styles.resetButton} onPress={initializeGame}>
-        <Text style={styles.resetButtonText}>Yeniden Başla</Text>
+      <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
+        <Text style={styles.resetText}>Yeniden Başlat</Text>
       </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#f5f5f5',
     padding: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    marginBottom: 24,
     color: '#333',
-  },
-  moves: {
-    fontSize: 18,
-    color: '#666',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    width: 240,
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   card: {
-    width: '30%',
-    aspectRatio: 1,
+    width: 50,
+    height: 70,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
+    borderRadius: 8,
+    margin: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
-  flippedCard: {
-    backgroundColor: '#E1F0FF',
-  },
-  matchedCard: {
-    backgroundColor: '#E3FFF1',
+  cardOpen: {
+    backgroundColor: '#e0f7fa',
   },
   cardText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 32,
     color: '#333',
   },
   resetButton: {
+    marginTop: 16,
     backgroundColor: '#4A90E2',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
-  resetButtonText: {
+  resetText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
-});
-
-export default MemoryGameScreen; 
+}); 

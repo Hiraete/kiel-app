@@ -1,181 +1,249 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, ProgressBar, useTheme } from 'react-native-paper';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function ReportsScreen() {
-  const theme = useTheme();
+const ReportsScreen = () => {
+  const [selectedPeriod, setSelectedPeriod] = useState('haftalık');
 
   const reports = [
     {
-      id: 1,
-      title: 'Haftalık İlerleme',
-      categories: [
-        { name: 'Konuşma', progress: 0.8 },
-        { name: 'Egzersizler', progress: 0.6 },
-        { name: 'Oyunlar', progress: 0.9 },
-      ],
+      id: '1',
+      title: 'Günlük Aktivite Raporu',
+      period: 'Son 7 gün',
+      date: '2024-03-20',
+      type: 'Aktivite',
+      status: 'Tamamlandı',
+      icon: 'chart-line',
     },
     {
-      id: 2,
-      title: 'Aylık İlerleme',
-      categories: [
-        { name: 'Kelime Hazinesi', progress: 0.7 },
-        { name: 'Artikülasyon', progress: 0.5 },
-        { name: 'Ses Kontrolü', progress: 0.8 },
-      ],
+      id: '2',
+      title: 'Gelişim Değerlendirmesi',
+      period: 'Aylık',
+      date: '2024-03-01',
+      type: 'Değerlendirme',
+      status: 'Hazırlanıyor',
+      icon: 'chart-bar',
+    },
+    {
+      id: '3',
+      title: 'Sosyal Etkileşim Analizi',
+      period: 'Haftalık',
+      date: '2024-03-18',
+      type: 'Analiz',
+      status: 'Tamamlandı',
+      icon: 'chart-bubble',
     },
   ];
 
-  const statistics = [
-    {
-      title: 'Tamamlanan Aktiviteler',
-      value: '24',
-      unit: 'aktivite',
-      trend: '+3 geçen haftaya göre',
-    },
-    {
-      title: 'Toplam Çalışma Süresi',
-      value: '12.5',
-      unit: 'saat',
-      trend: '+2.5 geçen haftaya göre',
-    },
-    {
-      title: 'Başarı Oranı',
-      value: '85',
-      unit: '%',
-      trend: '+5% geçen haftaya göre',
-    },
+  const periods = [
+    { id: 'günlük', label: 'Günlük' },
+    { id: 'haftalık', label: 'Haftalık' },
+    { id: 'aylık', label: 'Aylık' },
+    { id: 'yıllık', label: 'Yıllık' },
   ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Tamamlandı':
+        return '#4CAF50';
+      case 'Hazırlanıyor':
+        return '#FFC107';
+      default:
+        return '#666';
+    }
+  };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
-          Gelişim Raporları
-        </Text>
-        <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
-          İlerlemenizi takip edin
-        </Text>
-      </View>
-
-      <View style={styles.content}>
-        {/* İstatistikler */}
-        <View style={styles.statsGrid}>
-          {statistics.map((stat, index) => (
-            <Card
-              key={index}
-              style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
-              mode="elevated"
+        <Text style={styles.title}>Raporlar</Text>
+        <View style={styles.periodSelector}>
+          {periods.map((period) => (
+            <TouchableOpacity
+              key={period.id}
+              style={[
+                styles.periodButton,
+                selectedPeriod === period.id && styles.periodButtonActive,
+              ]}
+              onPress={() => setSelectedPeriod(period.id)}
             >
-              <Card.Content>
-                <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-                  {stat.title}
-                </Text>
-                <View style={styles.statValue}>
-                  <Text
-                    variant="headlineMedium"
-                    style={{ color: theme.colors.primary }}
-                  >
-                    {stat.value}
-                  </Text>
-                  <Text
-                    variant="bodySmall"
-                    style={{ color: theme.colors.onSurfaceVariant }}
-                  >
-                    {stat.unit}
-                  </Text>
-                </View>
-                <Text
-                  variant="bodySmall"
-                  style={{ color: theme.colors.tertiary }}
-                >
-                  {stat.trend}
-                </Text>
-              </Card.Content>
-            </Card>
+              <Text
+                style={[
+                  styles.periodButtonText,
+                  selectedPeriod === period.id && styles.periodButtonTextActive,
+                ]}
+              >
+                {period.label}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
-
-        {/* İlerleme Raporları */}
-        {reports.map((report) => (
-          <Card
-            key={report.id}
-            style={[styles.reportCard, { backgroundColor: theme.colors.surface }]}
-            mode="elevated"
-          >
-            <Card.Content>
-              <Text
-                variant="titleLarge"
-                style={{ color: theme.colors.onSurface, marginBottom: 16 }}
-              >
-                {report.title}
-              </Text>
-              {report.categories.map((category, index) => (
-                <View key={index} style={styles.category}>
-                  <View style={styles.categoryHeader}>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                      {category.name}
-                    </Text>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>
-                      {`${Math.round(category.progress * 100)}%`}
-                    </Text>
-                  </View>
-                  <ProgressBar
-                    progress={category.progress}
-                    color={theme.colors.primary}
-                    style={styles.progressBar}
-                  />
-                </View>
-              ))}
-            </Card.Content>
-          </Card>
-        ))}
       </View>
-    </ScrollView>
+
+      <ScrollView style={styles.content}>
+        {reports.map((report) => (
+          <TouchableOpacity key={report.id} style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.titleContainer}>
+                <MaterialCommunityIcons name={report.icon as any} size={24} color="#4A90E2" />
+                <Text style={styles.cardTitle}>{report.title}</Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(report.status) }]}>
+                <Text style={styles.statusText}>{report.status}</Text>
+              </View>
+            </View>
+
+            <View style={styles.cardDetails}>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="calendar" size={20} color="#666" />
+                <Text style={styles.detailText}>{report.date}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="clock-outline" size={20} color="#666" />
+                <Text style={styles.detailText}>{report.period}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="tag" size={20} color="#666" />
+                <Text style={styles.detailText}>{report.type}</Text>
+              </View>
+            </View>
+
+            <View style={styles.cardFooter}>
+              <TouchableOpacity style={styles.actionButton}>
+                <MaterialCommunityIcons name="download" size={20} color="#4A90E2" />
+                <Text style={styles.actionButtonText}>İndir</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton}>
+                <MaterialCommunityIcons name="share-variant" size={20} color="#4A90E2" />
+                <Text style={styles.actionButtonText}>Paylaş</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   header: {
     padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 4,
+  },
+  periodButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  periodButtonActive: {
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  periodButtonText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  periodButtonTextActive: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   content: {
     padding: 16,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '30%',
+  card: {
+    backgroundColor: '#fff',
     borderRadius: 12,
-  },
-  statValue: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-    marginVertical: 8,
-  },
-  reportCard: {
+    padding: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  category: {
-    marginBottom: 16,
-  },
-  categoryHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8,
+    flex: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  cardDetails: {
+    marginBottom: 16,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
+  detailText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
   },
-}); 
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  actionButtonText: {
+    color: '#4A90E2',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+});
+
+export default ReportsScreen; 

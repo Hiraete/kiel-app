@@ -1,5 +1,4 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
     "module": "esnext",
@@ -20,7 +19,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "**/*.ts",
@@ -31,5 +31,6 @@
     "node_modules",
     "babel.config.js",
     "metro.config.js"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }

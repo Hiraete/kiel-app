@@ -10,6 +10,11 @@ export class NotificationService {
     content: string,
     data: any = {}
   ) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('Kullanıcı bulunamadı');
+    }
+
     const notification = new Notification({
       userId,
       type,

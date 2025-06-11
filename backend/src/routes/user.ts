@@ -1,13 +1,14 @@
 import express, { Request, Response } from 'express';
-import { auth } from '../middleware/auth';
-import { User, IUser } from '../models/User';
+import { protect } from '../middleware/auth';
+import { User, IUser, ChildProfile } from '../models/User';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
 // Profil bilgilerini getir
-router.get('/profile', auth, async (req: Request, res: Response): Promise<void> => {
+router.get('/profile', protect, async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById(req.user?._id).select('-password');
+    const user = await User.findById(req.user?.id).select('-password');
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
@@ -19,8 +20,8 @@ router.get('/profile', auth, async (req: Request, res: Response): Promise<void> 
 });
 
 // Profil güncelle
-router.patch('/profile', auth, async (req: Request, res: Response): Promise<void> => {
-  const allowedUpdates = ['name', 'profile'];
+router.patch('/profile', protect, async (req: Request, res: Response): Promise<void> => {
+  const allowedUpdates = ['fullName', 'profile'];
   const updates = Object.keys(req.body);
   const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
@@ -30,7 +31,7 @@ router.patch('/profile', auth, async (req: Request, res: Response): Promise<void
   }
 
   try {
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?.id);
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
@@ -39,8 +40,8 @@ router.patch('/profile', auth, async (req: Request, res: Response): Promise<void
     updates.forEach(update => {
       if (update === 'profile') {
         user.profile = { ...user.profile, ...req.body.profile };
-      } else if (update === 'name') {
-        user.name = req.body.name;
+      } else if (update === 'fullName') {
+        user.profile.fullName = req.body.fullName;
       }
     });
 
@@ -52,9 +53,9 @@ router.patch('/profile', auth, async (req: Request, res: Response): Promise<void
 });
 
 // Uzman profilini güncelle
-router.patch('/expert-profile', auth, async (req: Request, res: Response): Promise<void> => {
+router.patch('/expert-profile', protect, async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?.id);
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
@@ -78,7 +79,7 @@ router.patch('/expert-profile', auth, async (req: Request, res: Response): Promi
 });
 
 // Tüm uzmanları getir
-router.get('/experts', auth, async (_: Request, res: Response): Promise<void> => {
+router.get('/experts', protect, async (_: Request, res: Response): Promise<void> => {
   try {
     const experts = await User.find({ role: 'uzman' })
       .select('-password')
@@ -90,9 +91,9 @@ router.get('/experts', auth, async (_: Request, res: Response): Promise<void> =>
 });
 
 // Çocuk profili ekle
-router.post('/child-profile', auth, async (req: Request, res: Response): Promise<void> => {
+router.post('/child-profile', protect, async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?.id);
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
@@ -103,11 +104,12 @@ router.post('/child-profile', auth, async (req: Request, res: Response): Promise
       return;
     }
 
-    if (!user.profile.childProfiles) {
-      user.profile.childProfiles = [];
-    }
+    const childProfile: ChildProfile = {
+      id: new mongoose.Types.ObjectId().toString(),
+      ...req.body
+    };
 
-    user.profile.childProfiles.push(req.body);
+    user.childProfiles.push(childProfile);
     await user.save();
     res.status(201).json(user);
   } catch (error) {
@@ -116,15 +118,15 @@ router.post('/child-profile', auth, async (req: Request, res: Response): Promise
 });
 
 // Çocuk profilini güncelle
-router.patch('/child-profile/:id', auth, async (req: Request, res: Response): Promise<void> => {
+router.patch('/child-profile/:id', protect, async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?.id);
     if (!user) {
       res.status(404).json({ message: 'Kullanıcı bulunamadı' });
       return;
     }
-    const childProfile = user.profile.childProfiles?.find(
-      profile => profile.id === req.params.id
+    const childProfile = user.childProfiles.find(
+      (profile: ChildProfile) => profile.id === req.params.id
     );
 
     if (!childProfile) {

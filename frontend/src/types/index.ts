@@ -1,10 +1,41 @@
 // Kullanıcı ve Kimlik Doğrulama Tipleri
 export interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   role: 'uzman' | 'danisan';
-  profile: UserProfile;
+  profile: {
+    phone?: string;
+    address?: string;
+    bio?: string;
+    expertProfile?: {
+      title: string;
+      specialization: string[];
+      experience: number;
+      rating: number;
+      totalReviews: number;
+      availability: {
+        monday: boolean;
+        tuesday: boolean;
+        wednesday: boolean;
+        thursday: boolean;
+        friday: boolean;
+        saturday: boolean;
+        sunday: boolean;
+      };
+    };
+    childProfiles?: {
+      name: string;
+      age: number;
+      gender: 'male' | 'female' | 'other';
+      specialNeeds?: string;
+    }[];
+    preferences?: {
+      language: string;
+      notifications: boolean;
+      darkMode: boolean;
+    };
+  };
 }
 
 export interface UserProfile {
@@ -138,6 +169,7 @@ export interface AppointmentResponse {
 
 // Navigasyon Tipleri
 export type RootStackParamList = {
+  MainTabs: undefined;
   Home: undefined;
   Login: undefined;
   Register: undefined;
@@ -159,6 +191,19 @@ export type RootStackParamList = {
   Progress: undefined;
   Routine: undefined;
   Settings: undefined;
+  Chatbot: undefined;
+  ExpertProfile: { expertId: string };
+  VideoCall: { appointmentId: string; expertId: string };
+  VideoChat: { appointmentId: string };
+  ExerciseDetail: { exerciseId: string };
+  Chat: { expertId: string; expertName: string };
+  Consultation: { consultationId: string };
+  Forum: { forumId: string };
+  Reports: undefined;
+  Activities: undefined;
+  DailyProgram: undefined;
+  Consultations: undefined;
+  Forums: undefined;
 };
 
 // Form Tipleri

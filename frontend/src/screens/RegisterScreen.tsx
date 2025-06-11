@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,172 +22,247 @@ export const RegisterScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'uzman' | 'danisan'>('danisan');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    passwordConfirmation?: string;
+    general?: string;
+  }>({});
+
   const { register } = useAuth();
   const navigation = useNavigation<RegisterScreenNavigationProp>();
 
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    
+    if (!name) {
+      newErrors.name = 'İsim alanı gereklidir';
+    }
+    
+    if (!email) {
+      newErrors.email = 'E-posta adresi gereklidir';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Geçerli bir e-posta adresi giriniz';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Şifre gereklidir';
+    } else if (password.length < 6) {
+      newErrors.password = 'Şifre en az 6 karakter olmalıdır';
+    }
+
+    if (!passwordConfirmation) {
+      newErrors.passwordConfirmation = 'Şifre tekrarı gereklidir';
+    } else if (password !== passwordConfirmation) {
+      newErrors.passwordConfirmation = 'Şifreler eşleşmiyor';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleRegister = async () => {
     try {
-      if (!name || !email || !password) {
-        Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      if (!validateForm()) {
         return;
       }
 
-      await register(name, email, password, role);
+      setLoading(true);
+      setErrors({});
+      
+      await register(name, email, password);
       navigation.navigate('MainTabs');
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Kayıt olurken bir hata oluştu');
+      console.error('Register error:', error);
+      setErrors({
+        general: error.message || 'Kayıt olurken bir hata oluştu. Lütfen bilgilerinizi kontrol edin.'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Kayıt Ol</Text>
         
-        <TextInput
-          style={styles.input}
-          placeholder="Ad Soyad"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
+        {errors.general && (
+          <Text style={styles.errorText}>{errors.general}</Text>
+        )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="E-posta"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Şifre"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <View style={styles.roleContainer}>
-          <TouchableOpacity
-            style={[
-              styles.roleButton,
-              role === 'danisan' && styles.roleButtonActive,
-            ]}
-            onPress={() => setRole('danisan')}
-          >
-            <Text
-              style={[
-                styles.roleButtonText,
-                role === 'danisan' && styles.roleButtonTextActive,
-              ]}
-            >
-              Danışan
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.roleButton,
-              role === 'uzman' && styles.roleButtonActive,
-            ]}
-            onPress={() => setRole('uzman')}
-          >
-            <Text
-              style={[
-                styles.roleButtonText,
-                role === 'uzman' && styles.roleButtonTextActive,
-              ]}
-            >
-              Uzman
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, errors.name ? styles.inputError : null]}
+            placeholder="İsim"
+            value={name}
+            onChangeText={(text) => {
+              setName(text);
+              setErrors(prev => ({ ...prev, name: undefined }));
+            }}
+            editable={!loading}
+          />
+          {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Kayıt Ol</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, errors.email ? styles.inputError : null]}
+            placeholder="E-posta"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setErrors(prev => ({ ...prev, email: undefined }));
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!loading}
+          />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, errors.password ? styles.inputError : null]}
+            placeholder="Şifre"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setErrors(prev => ({ ...prev, password: undefined }));
+            }}
+            secureTextEntry
+            editable={!loading}
+          />
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, errors.passwordConfirmation ? styles.inputError : null]}
+            placeholder="Şifre Tekrarı"
+            value={passwordConfirmation}
+            onChangeText={(text) => {
+              setPasswordConfirmation(text);
+              setErrors(prev => ({ ...prev, passwordConfirmation: undefined }));
+            }}
+            secureTextEntry
+            editable={!loading}
+          />
+          {errors.passwordConfirmation && (
+            <Text style={styles.errorText}>{errors.passwordConfirmation}</Text>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Kayıt Ol</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.linkButton}
+          style={styles.loginLink}
           onPress={() => navigation.navigate('Login')}
+          disabled={loading}
         >
-          <Text style={styles.linkText}>Zaten hesabınız var mı? Giriş yapın</Text>
+          <Text style={styles.loginLinkText}>
+            Zaten hesabınız var mı? Giriş yapın
+          </Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#fff',
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
     justifyContent: 'center',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 30,
     textAlign: 'center',
-    color: '#333333',
+  },
+  inputContainer: {
+    marginBottom: 15,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ddd',
     padding: 15,
     borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    fontSize: 16,
+  },
+  inputError: {
+    borderColor: '#ff3b30',
+  },
+  errorText: {
+    color: '#ff3b30',
+    fontSize: 12,
+    marginTop: 5,
   },
   roleContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
     marginBottom: 20,
+    justifyContent: 'center',
   },
   roleButton: {
-    paddingHorizontal: 20,
     paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
     marginHorizontal: 5,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#007AFF',
   },
   roleButtonActive: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
+    backgroundColor: '#007AFF',
   },
   roleButtonText: {
-    color: '#666666',
-    fontSize: 14,
+    color: '#007AFF',
+    fontSize: 16,
   },
   roleButtonTextActive: {
-    color: '#FFFFFF',
+    color: '#fff',
   },
   button: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 8,
+    alignItems: 'center',
     marginTop: 10,
   },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
   buttonText: {
-    color: '#FFFFFF',
-    textAlign: 'center',
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
-  linkButton: {
-    marginTop: 15,
+  loginLink: {
+    marginTop: 20,
+    alignItems: 'center',
   },
-  linkText: {
-    color: '#4A90E2',
-    textAlign: 'center',
-    fontSize: 14,
+  loginLinkText: {
+    color: '#007AFF',
+    fontSize: 16,
   },
 }); 

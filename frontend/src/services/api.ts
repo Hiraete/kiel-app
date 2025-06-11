@@ -1,9 +1,14 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from './userService';
+import Constants from 'expo-constants';
 
-// Geliştirme ortamı için localhost kullanıyoruz
-const API_URL = 'http://localhost:3000/api';
+// API URL'ini ortama göre ayarla
+const API_URL = __DEV__ 
+  ? 'http://192.168.1.117:5000/api'  // Geliştirme
+  : 'https://api.kielapp.com/api';   // Prodüksiyon
+
+console.log('API URL:', API_URL);
 
 // Axios instance oluşturma
 export const api = axios.create({
@@ -11,12 +16,13 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 saniye timeout
 });
 
-// Request interceptor - her istekte token'ı ekle
+// Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
+    const token = await AsyncStorage.getItem('@KielApp:token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,13 +33,41 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - hata durumunda token'ı temizle
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('token');
+    const originalRequest = error.config;
+
+    // Token süresi dolmuşsa ve refresh token varsa
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = await AsyncStorage.getItem('@KielApp:refreshToken');
+        
+        if (refreshToken) {
+          const response = await api.post('/auth/refresh-token', {
+            refreshToken,
+          });
+
+          const { token } = response.data;
+          await AsyncStorage.setItem('@KielApp:token', token);
+
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh token da geçersizse kullanıcıyı logout yap
+        await AsyncStorage.removeItem('@KielApp:token');
+        await AsyncStorage.removeItem('@KielApp:refreshToken');
+        await AsyncStorage.removeItem('@KielApp:user');
+        
+        // Burada bir event emitter kullanarak uygulama genelinde logout eventi tetikleyebilirsiniz
+        // EventEmitter.emit('LOGOUT');
+      }
     }
+
     return Promise.reject(error);
   }
 );
@@ -49,7 +83,7 @@ export const authService = {
   }) => {
     try {
       const response = await api.post('/auth/register', userData);
-      await AsyncStorage.setItem('token', response.data.token);
+      await AsyncStorage.setItem('@KielApp:token', response.data.token);
       return response.data;
     } catch (error) {
       throw error;
@@ -57,20 +91,27 @@ export const authService = {
   },
 
   // Giriş yapma
-  login: async (email: string, password: string, role: 'uzman' | 'danisan') => {
+  login: async (email: string, password: string, role: 'uzman' | 'danisan' = 'danisan') => {
     try {
       const response = await api.post('/auth/login', { email, password, role });
-      await AsyncStorage.setItem('token', response.data.token);
-      return response.data;
-    } catch (error) {
-      throw error;
+      if (response.data.token) {
+        await AsyncStorage.setItem('@KielApp:token', response.data.token);
+        return response.data;
+      } else {
+        throw new Error('Token alınamadı');
+      }
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(error.response.data.message || 'Giriş yapılırken bir hata oluştu');
+      }
+      throw new Error('Sunucuya bağlanılamadı');
     }
   },
 
   // Çıkış yapma
   logout: async () => {
     try {
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('@KielApp:token');
     } catch (error) {
       throw error;
     }
@@ -130,6 +171,34 @@ export const appointmentService = {
     const response = await api.patch(`/appointments/${appointmentId}/status`, { status });
     return response.data;
   },
+};
+
+// Token kontrolü için test fonksiyonu
+export const checkAuthStatus = async () => {
+  try {
+    const token = await AsyncStorage.getItem('@KielApp:token');
+    const refreshToken = await AsyncStorage.getItem('@KielApp:refreshToken');
+    const user = await AsyncStorage.getItem('@KielApp:user');
+    
+    console.log('Auth Durumu:', {
+      token: token ? 'Var' : 'Yok',
+      refreshToken: refreshToken ? 'Var' : 'Yok',
+      user: user ? 'Var' : 'Yok'
+    });
+    
+    return {
+      isAuthenticated: !!token,
+      hasRefreshToken: !!refreshToken,
+      hasUser: !!user
+    };
+  } catch (error) {
+    console.error('Auth durumu kontrol edilirken hata:', error);
+    return {
+      isAuthenticated: false,
+      hasRefreshToken: false,
+      hasUser: false
+    };
+  }
 };
 
 export default api;

@@ -1,22 +1,22 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import { notificationController } from '../controllers/notificationController';
-import { authenticateToken } from '../middleware/authMiddleware';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
 // Tüm bildirimleri getir
-router.get('/', authenticateToken, notificationController.getNotifications);
+router.get('/', protect as RequestHandler, notificationController.getNotifications as RequestHandler);
 
 // Bildirimi okundu olarak işaretle
-router.patch('/:notificationId/read', authenticateToken, notificationController.markAsRead);
+router.patch('/:notificationId/read', protect as RequestHandler, notificationController.markAsRead as RequestHandler);
 
 // Tüm bildirimleri okundu olarak işaretle
-router.patch('/read-all', authenticateToken, notificationController.markAllAsRead);
+router.patch('/read-all', protect as RequestHandler, notificationController.markAllAsRead as RequestHandler);
 
 // Okunmamış bildirim sayısını getir
-router.get('/unread-count', authenticateToken, notificationController.getUnreadCount);
+router.get('/unread-count', protect as RequestHandler, notificationController.getUnreadCount as RequestHandler);
 
 // Bildirimi sil
-router.delete('/:notificationId', authenticateToken, notificationController.deleteNotification);
+router.delete('/:notificationId', protect as RequestHandler, notificationController.deleteNotification as RequestHandler);
 
 export default router; 

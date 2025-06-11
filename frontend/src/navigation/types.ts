@@ -8,8 +8,10 @@ export type RootStackParamList = {
   CreateAppointment: { expertId: string };
   Appointments: undefined;
   AppointmentDetail: { appointmentId: string };
+  VideoCall: { appointmentId: string; expertId: string };
   Exercises: { activityId: string };
   DailyActivity: { programId: string };
+  DailyProgram: undefined;
   SensoryGame: undefined;
   SocialInteraction: undefined;
   MemoryGame: undefined;
@@ -32,9 +34,13 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
+  DailyActivity: undefined;
+  Exercises: undefined;
+  Games: undefined;
+  Reports: undefined;
   Profile: undefined;
-  Settings: undefined;
-  Other: undefined;
+  Forums: undefined;
+  Consultations: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>; 

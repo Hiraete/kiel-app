@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../types';
 import { Activity, Program, Appointment } from '../types/index';
 import api from '../services/api';
 import { Button } from 'react-native-paper';
@@ -47,8 +47,64 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    if (!user) return; // Kullanıcı yoksa veri çekme
     fetchData();
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    // Eğer veri gelmiyorsa örnek veri ekle
+    if (appointments.length === 0) {
+      setAppointments([
+        {
+          _id: '1',
+          expert: { _id: 'e1', name: 'Dr. Uzman' },
+          client: { _id: 'c1', name: 'Danışan' },
+          date: new Date().toISOString(),
+          startTime: '10:00',
+          endTime: '10:30',
+          status: 'scheduled',
+        } as any
+      ]);
+    }
+    if (activities.length === 0) {
+      setActivities([
+        {
+          _id: 'a1',
+          title: 'Duyu Oyunu',
+          description: 'Duyu gelişimi için oyun.',
+          type: 'sensory',
+          difficultyLevel: 'Kolay',
+          duration: 20,
+          materials: [],
+          steps: [],
+          targetSkills: [],
+          ageRange: { min: 3, max: 7 },
+          creator: '',
+          ratings: [],
+          createdAt: '',
+          updatedAt: '',
+        } as any
+      ]);
+    }
+    if (programs.length === 0) {
+      setPrograms([
+        {
+          _id: 'p1',
+          name: 'Günlük Program',
+          description: 'Örnek program açıklaması.',
+          activities: [],
+          creators: [],
+          assignees: [],
+          startDate: '',
+          endDate: '',
+          progress: 50,
+          status: 'active',
+          createdAt: '',
+          updatedAt: '',
+        } as any
+      ]);
+    }
+  }, [appointments, activities, programs]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -56,7 +112,7 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
   const handleAppointmentPress = (appointment: Appointment) => {
-    navigation.navigate('AppointmentDetail', { appointmentId: appointment._id });
+    navigation.navigate('AppointmentDetail', { appointmentId: appointment._id } as any);
   };
 
   const renderAppointmentItem = (appointment: Appointment) => {
@@ -99,7 +155,7 @@ export default function HomeScreen() {
             navigation.navigate('SocialInteraction');
             break;
           default:
-            navigation.navigate('Exercises', { activityId: activity._id });
+            navigation.navigate('Exercises', { activityId: activity._id } as any);
         }
       }}
     >
@@ -127,7 +183,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={program._id}
       style={styles.card}
-      onPress={() => navigation.navigate('DailyActivity', { programId: program._id })}
+      onPress={() => navigation.navigate('DailyActivity', { programId: program._id } as any)}
     >
       <MaterialCommunityIcons name="calendar-check" size={24} color="#4A90E2" />
       <Text style={styles.cardTitle}>{program.name}</Text>
@@ -171,23 +227,53 @@ export default function HomeScreen() {
         Hoş Geldiniz, {user?.name}
       </Text>
       
+      {/* Geniş butonlar */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 16 }}>
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: '#4A90E2', margin: 8, borderRadius: 12, padding: 24, alignItems: 'center' }}
+          onPress={() => navigation.navigate('VideoChat' as any)}
+        >
+          <MaterialCommunityIcons name="video" size={32} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 18, marginTop: 8 }}>Görüntülü Sohbet</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: '#34C759', margin: 8, borderRadius: 12, padding: 24, alignItems: 'center' }}
+          onPress={() => navigation.navigate('Chat', { expertId: 'dummyId', expertName: user?.name || 'Uzman' } as any)}
+        >
+          <MaterialCommunityIcons name="chat" size={32} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 18, marginTop: 8 }}>Sohbet</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Yaklaşan Randevular</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScrollContent}
+        >
           {appointments.map(renderAppointmentItem)}
         </ScrollView>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Günlük Aktiviteler</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScrollContent}
+        >
           {activities.map(renderActivityCard)}
         </ScrollView>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Aktif Programlar</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScrollContent}
+        >
           {programs.map(renderProgramCard)}
         </ScrollView>
       </View>
@@ -200,32 +286,21 @@ export default function HomeScreen() {
         >
           Tüm Randevular
         </Button>
-
-        {user?.role === 'danisan' && (
-          <Button
-            mode="contained"
-            onPress={() => navigation.navigate('CreateAppointment' as never)}
-            style={styles.button}
-          >
-            Yeni Randevu
-          </Button>
-        )}
+        <Button
+          mode="contained"
+          onPress={() => navigation.navigate('CreateAppointment' as never)}
+          style={styles.button}
+        >
+          Yeni Randevu
+        </Button>
       </View>
 
       <TouchableOpacity
         style={styles.chatButton}
-        onPress={() => {
-          if (appointments.length > 0) {
-            const lastAppointment = appointments[0];
-            navigation.navigate('Chat', {
-              expertId: lastAppointment.expert._id,
-              expertName: lastAppointment.expert.name,
-            });
-          }
-        }}
+        onPress={() => navigation.navigate('Chatbot' as any)}
       >
         <MaterialCommunityIcons name="message-text" size={24} color="#fff" />
-        <Text style={styles.chatButtonText}>Uzmanla Görüş</Text>
+        <Text style={styles.chatButtonText}>Sağlık Asistanı</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -344,5 +419,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  horizontalScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
 }); 

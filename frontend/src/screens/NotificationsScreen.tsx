@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Notification } from '../types';
 import api from '../services/api';
+
+interface Notification {
+  _id: string;
+  type: 'appointment' | 'message' | 'other';
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
 
 const NotificationsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);

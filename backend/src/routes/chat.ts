@@ -1,16 +1,16 @@
 import express, { RequestHandler } from 'express';
-import { authenticate } from '../middleware/auth';
+import { protect } from '../middleware/auth';
 import { getMessages, sendMessage, markAsRead } from '../controllers/chatController';
 
 const router = express.Router();
 
 // Tüm mesajları getir
-router.get('/messages/:receiverId', authenticate, getMessages as RequestHandler);
+router.get('/messages/:receiverId', protect as RequestHandler, getMessages as RequestHandler);
 
 // Yeni mesaj gönder
-router.post('/send', authenticate, sendMessage as RequestHandler);
+router.post('/send', protect as RequestHandler, sendMessage as RequestHandler);
 
 // Mesajları okundu olarak işaretle
-router.put('/read/:senderId', authenticate, markAsRead as RequestHandler);
+router.put('/read/:senderId', protect as RequestHandler, markAsRead as RequestHandler);
 
 export default router; 

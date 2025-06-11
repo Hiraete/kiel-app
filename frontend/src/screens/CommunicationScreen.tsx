@@ -99,6 +99,8 @@ export default function CommunicationScreen() {
         showsHorizontalScrollIndicator={false}
         style={styles.categoryScroll}
         contentContainerStyle={styles.categoryContainer}
+        pagingEnabled={false}
+        snapToInterval={0}
       >
         {categories.map((category) => (
           <Chip
@@ -116,7 +118,12 @@ export default function CommunicationScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView style={styles.cardsContainer}>
+      <ScrollView
+        style={styles.cardsContainer}
+        contentContainerStyle={styles.cardsGrid}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
         <View style={styles.cardsGrid}>
           {filteredCards.map((card) => (
             <Card key={card.id} style={styles.card}>
@@ -186,6 +193,8 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   categoryChip: {
     marginHorizontal: 4,
@@ -197,6 +206,7 @@ const styles = StyleSheet.create({
     padding: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   card: {
     width: '48%',

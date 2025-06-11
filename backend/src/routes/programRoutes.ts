@@ -1,5 +1,5 @@
 import express, { RequestHandler } from 'express';
-import { auth } from '../middleware/auth';
+import { protect } from '../middleware/auth';
 import {
   createProgram,
   getPrograms,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // Tüm rotalar için auth middleware'ini kullan
-router.use(auth as RequestHandler);
+router.use(protect as RequestHandler);
 
 // Program rotaları
 router.post('/', createProgram as RequestHandler);

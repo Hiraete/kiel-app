@@ -11,7 +11,7 @@ interface AuthRequest extends Request {
 }
 
 // Aktivite oluştur
-export const createActivity = async (req: AuthRequest, res: Response) => {
+export const createActivity = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const activity = new Activity({
       ...req.body,
@@ -27,7 +27,7 @@ export const createActivity = async (req: AuthRequest, res: Response) => {
 };
 
 // Tüm aktiviteleri getir
-export const getActivities = async (req: Request, res: Response) => {
+export const getActivities = async (_req: Request, res: Response): Promise<void> => {
   try {
     const activities = await Activity.find()
       .sort({ createdAt: -1 })
@@ -40,14 +40,15 @@ export const getActivities = async (req: Request, res: Response) => {
 };
 
 // Tek bir aktiviteyi getir
-export const getActivity = async (req: Request, res: Response) => {
+export const getActivity = async (req: Request, res: Response): Promise<void> => {
   try {
     const activity = await Activity.findById(req.params.id)
       .populate('createdBy', 'name')
       .populate('ratings.userId', 'name');
 
     if (!activity) {
-      return res.status(404).json({ message: 'Aktivite bulunamadı' });
+      res.status(404).json({ message: 'Aktivite bulunamadı' });
+      return;
     }
 
     res.json(activity);
@@ -58,16 +59,18 @@ export const getActivity = async (req: Request, res: Response) => {
 };
 
 // Aktiviteyi güncelle
-export const updateActivity = async (req: AuthRequest, res: Response) => {
+export const updateActivity = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const activity = await Activity.findById(req.params.id);
 
     if (!activity) {
-      return res.status(404).json({ message: 'Aktivite bulunamadı' });
+      res.status(404).json({ message: 'Aktivite bulunamadı' });
+      return;
     }
 
     if (activity.createdBy.toString() !== req.user?.id) {
-      return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      return;
     }
 
     const updatedActivity = await Activity.findByIdAndUpdate(
@@ -84,16 +87,18 @@ export const updateActivity = async (req: AuthRequest, res: Response) => {
 };
 
 // Aktiviteyi sil
-export const deleteActivity = async (req: AuthRequest, res: Response) => {
+export const deleteActivity = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const activity = await Activity.findById(req.params.id);
 
     if (!activity) {
-      return res.status(404).json({ message: 'Aktivite bulunamadı' });
+      res.status(404).json({ message: 'Aktivite bulunamadı' });
+      return;
     }
 
     if (activity.createdBy.toString() !== req.user?.id) {
-      return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+      return;
     }
 
     await activity.deleteOne();
@@ -105,16 +110,18 @@ export const deleteActivity = async (req: AuthRequest, res: Response) => {
 };
 
 // Aktiviteye puan ver
-export const rateActivity = async (req: AuthRequest, res: Response) => {
+export const rateActivity = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const activity = await Activity.findById(req.params.id);
 
     if (!activity) {
-      return res.status(404).json({ message: 'Aktivite bulunamadı' });
+      res.status(404).json({ message: 'Aktivite bulunamadı' });
+      return;
     }
 
     if (!req.user?.id) {
-      return res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      res.status(401).json({ message: 'Yetkilendirme gerekli' });
+      return;
     }
 
     const alreadyRated = activity.ratings.find(

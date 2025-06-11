@@ -1,16 +1,23 @@
-import express from 'express';
-import { auth } from '../middleware/auth';
+import express, { Request, Response, RequestHandler } from 'express';
+import { protect } from '../middleware/auth';
+import { User } from '../models/User';
 
 const router = express.Router();
 
 // Kullanıcı profili
-router.get('/profile', auth, async (req, res) => {
+router.get('/profile', protect as RequestHandler, async (req: Request, res: Response): Promise<void> => {
   try {
+    const user = await User.findById(req.user?.id).select('-password');
+    if (!user) {
+      res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+      return;
+    }
     res.json({
       user: {
-        id: req.user._id,
-        username: req.user.username,
-        email: req.user.email,
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        profile: user.profile
       }
     });
   } catch (error) {
@@ -19,7 +26,7 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // Korumalı test rotası
-router.get('/test', auth, (req, res) => {
+router.get('/test', protect as RequestHandler, (_: Request, res: Response): void => {
   res.json({ message: 'Bu korumalı bir rotadır' });
 });
 

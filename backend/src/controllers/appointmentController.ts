@@ -101,8 +101,8 @@ export class AppointmentController {
       }
 
       const appointments = await Appointment.find(query)
-        .populate('expert', 'name profile')
-        .populate('client', 'name profile')
+        .populate('expert', 'fullName profile')
+        .populate('client', 'fullName profile')
         .sort({ date: 1, startTime: 1 });
 
       res.json({ appointments });

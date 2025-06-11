@@ -1,6 +1,8 @@
 import { api } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const API_URL = 'http://localhost:5000/api';
+
 export interface User {
   _id: string;
   name: string;
@@ -9,6 +11,9 @@ export interface User {
   profile: {
     phone?: string;
     address?: string;
+    birthDate?: string;
+    emergencyContact?: string;
+    profileImage?: string;
     expertProfile?: {
       title: string;
       specialization: string[];
@@ -46,7 +51,7 @@ export const login = async (
   password: string,
   role: 'uzman' | 'danisan'
 ): Promise<LoginResponse> => {
-  const response = await fetch(`${api}/auth/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -68,7 +73,7 @@ export const register = async (
   password: string,
   role: 'uzman' | 'danisan'
 ): Promise<LoginResponse> => {
-  const response = await fetch(`${api}/auth/register`, {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -87,7 +92,7 @@ export const register = async (
 export const userService = {
   async getProfile() {
     const token = await AsyncStorage.getItem('token');
-    const response = await fetch(`${api}/users/profile`, {
+    const response = await fetch(`${API_URL}/users/profile`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -102,7 +107,7 @@ export const userService = {
 
   async updateProfile(profileData: Partial<User['profile']>) {
     const token = await AsyncStorage.getItem('token');
-    const response = await fetch(`${api}/users/profile`, {
+    const response = await fetch(`${API_URL}/users/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -120,7 +125,7 @@ export const userService = {
 
   async updateExpertProfile(expertProfileData: User['profile']['expertProfile']) {
     const token = await AsyncStorage.getItem('token');
-    const response = await fetch(`${api}/users/expert-profile`, {
+    const response = await fetch(`${API_URL}/users/expert-profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -138,7 +143,7 @@ export const userService = {
 
   async getExperts(): Promise<User[]> {
     const token = await AsyncStorage.getItem('token');
-    const response = await fetch(`${api}/users/experts`, {
+    const response = await fetch(`${API_URL}/users/experts`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

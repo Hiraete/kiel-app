@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "KielApp",
-    "slug": "kiel-app",
+    "slug": "KielApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -30,6 +30,7 @@
       ]
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
     "extra": {
@@ -37,6 +38,10 @@
         "projectId": "kiel-app"
       }
     },
-    "entryPoint": "./App.tsx"
+    "entryPoint": "./App.tsx",
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "kielapp"
   }
 }

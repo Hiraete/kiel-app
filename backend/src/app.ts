@@ -21,7 +21,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:19006', 'http://192.168.1.117:8081'],
+  origin: ['http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
